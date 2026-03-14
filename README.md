@@ -35,7 +35,6 @@ python plot_results.py
 
 ### 3. View Dashboard
 Open `analysis/dashboard.html` in any browser no server needed.
-http://127.0.0.1:5500/analysis/dashboard.html
 
 ## Algorithms Compared
 | Algorithm | Balance Strategy | Rotations |
