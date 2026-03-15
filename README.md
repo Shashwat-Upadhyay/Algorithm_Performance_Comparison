@@ -34,7 +34,7 @@ python plot_results.py
 ```
 
 ### 3. View Dashboard
-Open `analysis/dashboard.html` in any browser — no server needed.
+Open `analysis/dashboard.html` in any browser no server needed.
 
 ## Algorithms Compared
 | Algorithm | Balance Strategy | Rotations |
@@ -55,4 +55,8 @@ Open `analysis/dashboard.html` in any browser — no server needed.
 - Reverse Sorted
 
 ## Input Sizes
-1,000 → 100,000 elements
+1,000 elements
+5,000 elements
+10,000 elements
+50,000 elements
+100,000 elements
