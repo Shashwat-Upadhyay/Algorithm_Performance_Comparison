@@ -3,21 +3,23 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Tree Algorithm — Comparative Analysis</title>
+<title>Algorithm Performance Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --bg:       #0b0f1a;
-    --surface:  #131826;
-    --card:     #1a2035;
-    --border:   #252d45;
-    --avl:      #00e5ff;
-    --rb:       #ff4f7b;
-    --splay:    #a78bfa;
-    --text:     #e2e8f0;
-    --muted:    #64748b;
-    --accent:   #f59e0b;
+    --bg:       #f5f5f5;
+    --white:    #ffffff;
+    --border:   #111111;
+    --text:     #111111;
+    --muted:    #666666;
+    --light:    #e8e8e8;
+    --avl:      #dc2626;
+    --rb:       #2563eb;
+    --splay:    #16a34a;
+    --avl-bg:   rgba(220,38,38,0.08);
+    --rb-bg:    rgba(37,99,235,0.08);
+    --splay-bg: rgba(22,163,74,0.08);
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -25,220 +27,277 @@
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Lato', sans-serif;
     min-height: 100vh;
-    overflow-x: hidden;
   }
 
-  /* ── grid noise texture overlay ── */
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    background-image:
-      radial-gradient(ellipse 80% 50% at 20% 0%, rgba(0,229,255,.06) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(167,139,250,.06) 0%, transparent 60%);
-    pointer-events: none; z-index: 0;
-  }
-
-  /* ── header ── */
+  /* ── header ─────────────────────────────────────────────────────────────── */
   header {
-    position: relative; z-index: 1;
-    padding: 2.5rem 3rem 1.5rem;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: flex-end; justify-content: space-between;
-    flex-wrap: wrap; gap: 1rem;
+    background: var(--white);
+    border-bottom: 2px solid var(--border);
+    padding: 1.8rem 3rem;
+    display: flex; align-items: center;
+    justify-content: space-between; flex-wrap: wrap; gap: 1rem;
   }
-  .logo {
-    font-family: 'Space Mono', monospace;
-    font-size: .7rem; letter-spacing: .2em; text-transform: uppercase;
-    color: var(--muted); margin-bottom: .4rem;
-  }
+
+  .header-left { display: flex; flex-direction: column; gap: .2rem; }
+
   h1 {
-    font-family: 'Space Mono', monospace;
-    font-size: clamp(1.4rem, 3vw, 2rem);
-    font-weight: 700; line-height: 1.15;
-    background: linear-gradient(135deg, var(--avl), var(--rb), var(--splay));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    letter-spacing: .05em;
+    color: var(--text);
+    line-height: 1;
   }
+
+  .header-sub {
+    font-size: .78rem; color: var(--muted);
+    letter-spacing: .12em; text-transform: uppercase; font-weight: 400;
+  }
+
   .legend {
-    display: flex; gap: 1.2rem; flex-wrap: wrap;
+    display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;
   }
   .legend-item {
-    display: flex; align-items: center; gap: .45rem;
-    font-size: .82rem; font-weight: 500;
+    display: flex; align-items: center; gap: .55rem;
+    font-size: .82rem; font-weight: 700; letter-spacing: .04em;
   }
-  .dot {
-    width: 10px; height: 10px; border-radius: 50%;
+  .legend-dot {
+    width: 12px; height: 12px; border-radius: 2px;
+    border: 2px solid var(--border);
   }
 
-  /* ── controls ── */
-  .controls {
-    position: relative; z-index: 1;
-    padding: 1.2rem 3rem;
-    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  /* ── upload bar ──────────────────────────────────────────────────────────── */
+  .upload-bar {
+    background: var(--white);
     border-bottom: 1px solid var(--border);
+    padding: .7rem 3rem;
+    display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap;
+  }
+  .upload-bar span {
+    font-size: .7rem; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .12em; font-weight: 700;
+  }
+  .upload-bar input[type=file] {
+    font-size: .78rem; color: var(--text);
+    border: 1.5px solid var(--border);
+    border-radius: 4px; padding: .28rem .7rem;
+    background: var(--white); cursor: pointer;
+    font-family: 'DM Mono', monospace;
+  }
+  .upload-bar input[type=file]::file-selector-button {
+    background: var(--text); color: white;
+    border: none; padding: .25rem .65rem;
+    border-radius: 3px; cursor: pointer;
+    font-size: .72rem; font-weight: 700;
+    margin-right: .6rem; letter-spacing: .05em;
+  }
+  #uploadStatus {
+    font-family: 'DM Mono', monospace;
+    font-size: .72rem; color: var(--muted);
+  }
+  #uploadStatus.ok  { color: var(--splay); font-weight: 500; }
+  #uploadStatus.err { color: var(--avl);   font-weight: 500; }
+
+  /* ── controls ────────────────────────────────────────────────────────────── */
+  .controls {
+    background: var(--white);
+    border-bottom: 2px solid var(--border);
+    padding: .9rem 3rem;
+    display: flex; align-items: center; gap: 1.4rem; flex-wrap: wrap;
   }
   .ctrl-label {
-    font-family: 'Space Mono', monospace;
-    font-size: .65rem; letter-spacing: .15em; text-transform: uppercase;
-    color: var(--muted); margin-right: .2rem;
+    font-family: 'DM Mono', monospace;
+    font-size: .65rem; letter-spacing: .15em;
+    text-transform: uppercase; color: var(--muted); font-weight: 500;
   }
-  .tab-group { display: flex; gap: .35rem; }
+  .tab-group { display: flex; gap: 0; }
   .tab {
-    padding: .38rem .9rem;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    background: transparent;
+    padding: .38rem 1rem;
+    border: 1.5px solid var(--border);
+    background: var(--white);
     color: var(--muted);
-    font-family: 'DM Sans', sans-serif;
-    font-size: .82rem; font-weight: 500;
+    font-family: 'Lato', sans-serif;
+    font-size: .78rem; font-weight: 700;
     cursor: pointer;
-    transition: all .2s;
+    transition: all .15s;
+    letter-spacing: .04em;
+    margin-left: -1.5px;
   }
-  .tab:hover { border-color: var(--text); color: var(--text); }
+  .tab:first-child { border-radius: 4px 0 0 4px; margin-left: 0; }
+  .tab:last-child  { border-radius: 0 4px 4px 0; }
+  .tab:hover { background: var(--light); color: var(--text); z-index: 1; }
   .tab.active {
-    background: var(--card);
-    border-color: var(--accent);
-    color: var(--accent);
+    background: var(--text);
+    color: var(--white);
+    z-index: 2;
   }
 
-  /* ── main content ── */
+  /* ── main grid ───────────────────────────────────────────────────────────── */
   main {
-    position: relative; z-index: 1;
     padding: 2rem 3rem 3rem;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
   }
 
-  /* ── cards ── */
+  /* ── cards ───────────────────────────────────────────────────────────────── */
   .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
+    background: var(--white);
+    border: 2px solid var(--border);
+    border-radius: 0;
     padding: 1.4rem 1.6rem;
-    transition: border-color .25s;
+    box-shadow: 4px 4px 0 var(--border);
+    transition: box-shadow .15s, transform .15s;
   }
-  .card:hover { border-color: #334260; }
+  .card:hover {
+    box-shadow: 6px 6px 0 var(--border);
+    transform: translate(-1px, -1px);
+  }
   .card.full { grid-column: 1 / -1; }
 
   .card-header {
     display: flex; align-items: flex-start;
-    justify-content: space-between; margin-bottom: 1.2rem;
+    justify-content: space-between;
+    margin-bottom: 1.2rem;
+    padding-bottom: .8rem;
+    border-bottom: 1px solid var(--light);
   }
   .card-title {
-    font-family: 'Space Mono', monospace;
-    font-size: .78rem; letter-spacing: .1em; text-transform: uppercase;
-    color: var(--muted);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.05rem; letter-spacing: .08em;
+    color: var(--text);
   }
   .card-subtitle {
-    font-size: .75rem; color: var(--muted); margin-top: .2rem;
-  }
-  .badge {
-    font-family: 'Space Mono', monospace;
-    font-size: .62rem; padding: .2rem .55rem;
-    border-radius: 4px; border: 1px solid var(--border);
-    color: var(--muted);
+    font-size: .72rem; color: var(--muted);
+    margin-top: .15rem; font-weight: 400;
   }
 
   canvas { width: 100% !important; }
 
-  /* ── stat row ── */
+  /* ── stat cards ──────────────────────────────────────────────────────────── */
   .stats-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1rem; margin-bottom: 1.5rem;
+    gap: 1rem;
   }
   .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 0;
     padding: 1rem 1.2rem;
+    box-shadow: 3px 3px 0 var(--border);
   }
   .stat-label {
-    font-size: .72rem; color: var(--muted); margin-bottom: .35rem;
+    font-family: 'DM Mono', monospace;
+    font-size: .62rem; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .1em;
+    margin-bottom: .6rem; font-weight: 500;
   }
-  .stat-values { display: flex; flex-direction: column; gap: .25rem; }
+  .stat-values { display: flex; flex-direction: column; gap: .35rem; }
   .stat-item {
     display: flex; justify-content: space-between; align-items: center;
+    padding: .3rem .5rem; border-radius: 3px;
   }
-  .stat-name { font-size: .78rem; font-weight: 500; }
+  .stat-item.avl-row   { background: var(--avl-bg); }
+  .stat-item.rb-row    { background: var(--rb-bg);  }
+  .stat-item.splay-row { background: var(--splay-bg); }
+  .stat-name { font-size: .78rem; font-weight: 700; }
   .stat-val {
-    font-family: 'Space Mono', monospace;
-    font-size: .8rem; font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    font-size: .78rem; font-weight: 500;
+  }
+  .stat-val.winner {
+    color: var(--splay);
+    font-weight: 700;
   }
 
-  /* ── insight box ── */
-  .insights {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem; margin-top: 1.5rem;
-  }
-  .insight {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1rem 1.1rem;
-    border-left: 3px solid var(--accent);
-  }
-  .insight-head {
-    font-family: 'Space Mono', monospace;
-    font-size: .65rem; letter-spacing: .1em; text-transform: uppercase;
-    color: var(--accent); margin-bottom: .4rem;
-  }
-  .insight p { font-size: .8rem; color: var(--muted); line-height: 1.55; }
-
-  /* ── table ── */
+  /* ── table ───────────────────────────────────────────────────────────────── */
   .tbl-wrap { overflow-x: auto; }
-  table {
-    width: 100%; border-collapse: collapse;
-    font-size: .8rem;
-  }
+  table { width: 100%; border-collapse: collapse; font-size: .8rem; }
   th {
-    font-family: 'Space Mono', monospace;
-    font-size: .62rem; letter-spacing: .08em; text-transform: uppercase;
-    color: var(--muted); text-align: left;
-    padding: .55rem .8rem;
-    border-bottom: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: .62rem; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted);
+    text-align: left; padding: .55rem .8rem;
+    border-bottom: 2px solid var(--border);
+    background: var(--bg); font-weight: 500;
   }
   td {
-    padding: .55rem .8rem;
-    border-bottom: 1px solid rgba(37,45,69,.6);
+    padding: .5rem .8rem;
+    border-bottom: 1px solid var(--light);
+    font-family: 'DM Mono', monospace; font-size: .75rem;
   }
+  td:first-child { font-family: 'Lato', sans-serif; font-size: .8rem; }
+  td:nth-child(2){ font-family: 'Lato', sans-serif; }
   tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(255,255,255,.02); }
-  .tree-avl  { color: var(--avl);   font-weight: 600; }
-  .tree-rb   { color: var(--rb);    font-weight: 600; }
-  .tree-splay{ color: var(--splay); font-weight: 600; }
-  .num { font-family: 'Space Mono', monospace; }
+  tr:hover td { background: var(--bg); }
 
-  /* ── winner chip ── */
-  .win { display: inline-block; padding: .1rem .4rem; border-radius: 4px; font-size: .68rem; font-weight: 700; }
-  .win-avl   { background: rgba(0,229,255,.15);   color: var(--avl); }
-  .win-rb    { background: rgba(255,79,123,.15);  color: var(--rb); }
-  .win-splay { background: rgba(167,139,250,.15); color: var(--splay); }
+  .tree-avl   { color: var(--avl);   font-weight: 700; }
+  .tree-rb    { color: var(--rb);    font-weight: 700; }
+  .tree-splay { color: var(--splay); font-weight: 700; }
+
+  /* ── op tabs inside card ─────────────────────────────────────────────────── */
+  .inner-tabs {
+    display: flex; gap: 0; margin-bottom: 1.2rem;
+  }
+  .inner-tab {
+    padding: .3rem .85rem;
+    border: 1.5px solid var(--border);
+    background: var(--white); color: var(--muted);
+    font-family: 'Lato', sans-serif;
+    font-size: .75rem; font-weight: 700;
+    cursor: pointer; transition: all .15s;
+    margin-left: -1.5px; letter-spacing: .04em;
+  }
+  .inner-tab:first-child { border-radius: 3px 0 0 3px; margin-left: 0; }
+  .inner-tab:last-child  { border-radius: 0 3px 3px 0; }
+  .inner-tab:hover { background: var(--light); color: var(--text); z-index:1; }
+  .inner-tab.active { background: var(--text); color: white; z-index: 2; }
+
+  /* ── empty state ─────────────────────────────────────────────────────────── */
+  .empty-state {
+    text-align: center; padding: 2.5rem 1rem;
+    color: var(--muted); font-size: .82rem;
+    font-family: 'DM Mono', monospace;
+  }
+  .empty-state strong { display: block; font-size: 1rem; margin-bottom: .4rem; color: var(--text); }
 
   @media (max-width: 900px) {
-    main { grid-template-columns: 1fr; padding: 1.5rem; }
+    main { grid-template-columns: 1fr; padding: 1rem 1.2rem; }
     .card.full { grid-column: 1; }
-    header, .controls { padding: 1.5rem; }
-    .stats-row, .insights { grid-template-columns: 1fr; }
+    header, .controls, .upload-bar { padding: 1rem 1.2rem; }
+    .stats-row { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <div>
-    <div class="logo">ADS — Comparative Analysis</div>
-    <h1>Tree Algorithm<br>Performance Dashboard</h1>
+  <div class="header-left">
+    <h1>Algorithm Performance Dashboard</h1>
+    <div class="header-sub">AVL Tree &nbsp;·&nbsp; Red-Black Tree &nbsp;·&nbsp; Splay Tree</div>
   </div>
   <div class="legend">
-    <div class="legend-item"><div class="dot" style="background:var(--avl)"></div> AVL Tree</div>
-    <div class="legend-item"><div class="dot" style="background:var(--rb)"></div> Red-Black Tree</div>
-    <div class="legend-item"><div class="dot" style="background:var(--splay)"></div> Splay Tree</div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--avl)"></div>
+      <span style="color:var(--avl)">AVL Tree</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--rb)"></div>
+      <span style="color:var(--rb)">Red-Black Tree</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--splay)"></div>
+      <span style="color:var(--splay)">Splay Tree</span>
+    </div>
   </div>
 </header>
+
+<div class="upload-bar">
+  <span>Load CSV</span>
+  <input type="file" id="csvFile" accept=".csv" />
+  <span id="uploadStatus">Select your results.csv to populate charts</span>
+</div>
 
 <div class="controls">
   <span class="ctrl-label">Pattern</span>
@@ -247,7 +306,7 @@
     <button class="tab" data-val="sorted">Sorted</button>
     <button class="tab" data-val="reverse">Reverse</button>
   </div>
-  <span class="ctrl-label" style="margin-left:1rem">Metric</span>
+  <span class="ctrl-label" style="margin-left:1.5rem">Metric</span>
   <div class="tab-group" id="metricTabs">
     <button class="tab active" data-val="rotations">Rotations</button>
     <button class="tab" data-val="comparisons">Comparisons</button>
@@ -257,422 +316,329 @@
 
 <main>
 
-  <!-- stat summary -->
-  <div class="card full" id="statCard">
-    <div class="card-header">
-      <div><div class="card-title">Summary at n = 100,000</div><div class="card-subtitle" id="statSubtitle">Random pattern</div></div>
-      <div class="badge" id="statBadge">INSERT</div>
-    </div>
-    <div class="stats-row" id="statsRow"></div>
-  </div>
-
-  <!-- rotations / comparisons / height chart -->
+  <!-- summary -->
   <div class="card full">
     <div class="card-header">
-      <div><div class="card-title" id="metricChartTitle">Rotations — Insert</div><div class="card-subtitle">All input sizes</div></div>
+      <div>
+        <div class="card-title">Summary at n = 100,000</div>
+        <div class="card-subtitle" id="statSubtitle">Random pattern — green = best (lowest)</div>
+      </div>
     </div>
-    <div class="tab-group" style="margin-bottom:1rem" id="opTabs">
-      <button class="tab active" data-val="insert">Insert</button>
-      <button class="tab" data-val="search">Search</button>
-      <button class="tab" data-val="delete">Delete</button>
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card"><div class="empty-state"><strong>No Data</strong>Upload CSV above</div></div>
+      <div class="stat-card"><div class="empty-state"><strong>No Data</strong>Upload CSV above</div></div>
+      <div class="stat-card"><div class="empty-state"><strong>No Data</strong>Upload CSV above</div></div>
     </div>
-    <canvas id="metricChart" height="110"></canvas>
+  </div>
+
+  <!-- metric line chart -->
+  <div class="card full">
+    <div class="card-header">
+      <div>
+        <div class="card-title" id="metricChartTitle">Rotations — Insert</div>
+        <div class="card-subtitle">Across all input sizes</div>
+      </div>
+    </div>
+    <div class="inner-tabs" id="opTabs">
+      <button class="inner-tab active" data-val="insert">Insert</button>
+      <button class="inner-tab" data-val="search">Search</button>
+      <button class="inner-tab" data-val="delete">Delete</button>
+    </div>
+    <canvas id="metricChart" height="95"></canvas>
   </div>
 
   <!-- height chart -->
   <div class="card">
     <div class="card-header">
-      <div><div class="card-title">Tree Height After Insert</div><div class="card-subtitle">vs theoretical log₂(n)</div></div>
+      <div>
+        <div class="card-title">Tree Height After Insert</div>
+        <div class="card-subtitle">vs log₂(n) theoretical bound</div>
+      </div>
     </div>
-    <canvas id="heightChart" height="170"></canvas>
+    <canvas id="heightChart" height="180"></canvas>
   </div>
 
-  <!-- rotations bar at n=100k -->
+  <!-- bar chart -->
   <div class="card">
     <div class="card-header">
-      <div><div class="card-title">Rotations at n = 100,000</div><div class="card-subtitle">Insert + Delete combined</div></div>
+      <div>
+        <div class="card-title">Rotations at n = 100,000</div>
+        <div class="card-subtitle">Insert &amp; Delete operations</div>
+      </div>
     </div>
-    <canvas id="barChart" height="170"></canvas>
+    <canvas id="barChart" height="180"></canvas>
   </div>
 
-  <!-- full data table -->
+  <!-- table -->
   <div class="card full">
     <div class="card-header">
-      <div><div class="card-title">Full Data Table</div><div class="card-subtitle" id="tableSubtitle">Showing: Random pattern</div></div>
+      <div>
+        <div class="card-title">Full Data Table</div>
+        <div class="card-subtitle" id="tableSubtitle">Showing: Random pattern</div>
+      </div>
     </div>
     <div class="tbl-wrap">
-      <table id="dataTable">
+      <table>
         <thead>
           <tr>
             <th>Tree</th><th>Operation</th><th>n</th>
             <th>Rotations</th><th>Comparisons</th><th>Height</th><th>Time (s)</th>
           </tr>
         </thead>
-        <tbody id="tableBody"></tbody>
+        <tbody id="tableBody">
+          <tr><td colspan="7">
+            <div class="empty-state"><strong>No Data</strong>Upload your results.csv to see table</div>
+          </td></tr>
+        </tbody>
       </table>
     </div>
-    <div class="insights" id="insightsBox"></div>
   </div>
 
 </main>
 
 <script>
-// ── Raw data ─────────────────────────────────────────────────────────────────
-const RAW = `tree,operation,pattern,n,time,rotations,comparisons,height
-AVL,insert,random,1000,0.000000,714,8737,12
-AVL,search,random,1000,0.000000,0,9179,12
-AVL,delete,random,1000,0.000000,387,8598,12
-RB,insert,random,1000,0.000000,610,8854,12
-RB,search,random,1000,0.000000,0,8263,12
-RB,delete,random,1000,0.000000,482,6253,12
-Splay,insert,random,1000,0.000000,4777,18083,28
-Splay,search,random,1000,0.000000,0,18568,22
-Splay,delete,random,1000,0.000000,5380,20029,0
-AVL,insert,sorted,1000,0.000000,990,8977,10
-AVL,search,sorted,1000,0.000000,0,8987,10
-AVL,delete,sorted,1000,0.000000,491,6806,10
-RB,insert,sorted,1000,0.000000,983,14481,17
-RB,search,sorted,1000,0.000000,0,8406,17
-RB,delete,sorted,1000,0.000000,492,6577,17
-Splay,insert,sorted,1000,0.000000,0,1998,1000
-Splay,search,sorted,1000,0.000000,0,6668,1000
-Splay,delete,sorted,1000,0.000000,1430,5670,0
-AVL,insert,reverse,1000,0.000000,990,8977,10
-AVL,search,reverse,1000,0.000000,0,8987,10
-AVL,delete,reverse,1000,0.000000,491,6806,10
-RB,insert,reverse,1000,0.000000,983,14481,17
-RB,search,reverse,1000,0.000000,0,8406,17
-RB,delete,reverse,1000,0.000000,492,6577,17
-Splay,insert,reverse,1000,0.000000,0,1998,1000
-Splay,search,reverse,1000,0.000000,0,6668,1000
-Splay,delete,reverse,1000,0.000000,1834,6265,0
-AVL,insert,random,5000,0.000000,3522,55491,15
-AVL,search,random,5000,0.000000,0,57776,15
-AVL,delete,random,5000,0.000000,1950,54975,15
-RB,insert,random,5000,0.000000,2976,55706,15
-RB,search,random,5000,0.000000,0,52901,15
-RB,delete,random,5000,0.000000,2174,43217,15
-Splay,insert,random,5000,0.000000,32286,120152,47
-Splay,search,random,5000,0.000000,0,115998,32
-Splay,delete,random,5000,0.000000,36333,130151,0
-AVL,insert,sorted,5000,0.000000,4987,56809,13
-AVL,search,sorted,5000,0.000000,0,56822,13
-AVL,delete,sorted,5000,0.000000,2489,42534,13
-RB,insert,sorted,5000,0.000000,4978,95715,22
-RB,search,sorted,5000,0.000000,0,54435,22
-RB,delete,sorted,5000,0.000000,2490,44339,22
-Splay,insert,sorted,5000,0.000000,0,9998,5000
-Splay,search,sorted,5000,0.000000,0,33670,5000
-Splay,delete,sorted,5000,0.000000,7206,28672,0
-AVL,insert,reverse,5000,0.000000,4987,56809,13
-AVL,search,reverse,5000,0.000000,0,56822,13
-AVL,delete,reverse,5000,0.000000,2489,42534,13
-RB,insert,reverse,5000,0.000000,4978,95715,22
-RB,search,reverse,5000,0.000000,0,54435,22
-RB,delete,reverse,5000,0.000000,2490,44339,22
-Splay,insert,reverse,5000,0.000000,0,9998,5000
-Splay,search,reverse,5000,0.000000,0,33670,5000
-Splay,delete,reverse,5000,0.000000,9335,31542,0
-AVL,insert,random,10000,0.000000,6999,120710,16
-AVL,search,random,10000,0.000000,0,125503,16
-AVL,delete,random,10000,0.000000,3942,119384,16
-RB,insert,random,10000,0.000000,5906,121760,16
-RB,search,random,10000,0.000000,0,116438,16
-RB,delete,random,10000,0.000000,4135,96833,16
-Splay,insert,random,10000,0.010000,71732,266139,50
-Splay,search,random,10000,0.000000,0,251166,35
-Splay,delete,random,10000,0.000000,80791,286805,0
-AVL,insert,sorted,10000,0.000000,9986,123617,14
-AVL,search,sorted,10000,0.000000,0,123631,14
-AVL,delete,sorted,10000,0.000000,4988,92566,14
-RB,insert,sorted,10000,0.000000,9976,211383,24
-RB,search,sorted,10000,0.000000,0,118853,24
-RB,delete,sorted,10000,0.000000,4989,98660,24
-Splay,insert,sorted,10000,0.000000,0,19998,10000
-Splay,search,sorted,10000,0.000000,0,67270,10000
-Splay,delete,sorted,10000,0.000000,14484,57272,0
-AVL,insert,reverse,10000,0.000000,9986,123617,14
-AVL,search,reverse,10000,0.000000,0,123631,14
-AVL,delete,reverse,10000,0.000000,4988,92566,14
-RB,insert,reverse,10000,0.000000,9976,211383,24
-RB,search,reverse,10000,0.000000,0,118853,24
-RB,delete,reverse,10000,0.000000,4989,98660,24
-Splay,insert,reverse,10000,0.000000,0,19998,10000
-Splay,search,reverse,10000,0.000000,0,67270,10000
-Splay,delete,reverse,10000,0.000000,18635,63120,0
-AVL,insert,random,50000,0.020000,34683,725078,19
-AVL,search,random,50000,0.000000,0,748687,19
-AVL,delete,random,50000,0.010000,19905,718406,19
-RB,insert,random,50000,0.000000,29110,726160,19
-RB,search,random,50000,0.010000,0,699459,19
-RB,delete,random,50000,0.000000,21158,600712,19
-Splay,insert,random,50000,0.010000,439462,1629258,60
-Splay,search,random,50000,0.010000,0,1486402,50
-Splay,delete,random,50000,0.010000,493577,1736600,0
-AVL,insert,sorted,50000,0.000000,49984,734465,16
-AVL,search,sorted,50000,0.000000,0,734481,16
-AVL,delete,sorted,50000,0.000000,24985,560198,16
-RB,insert,sorted,50000,0.010000,49971,1286225,29
-RB,search,sorted,50000,0.000000,0,704794,29
-RB,delete,sorted,50000,0.000000,24986,614183,29
-Splay,insert,sorted,50000,0.000000,0,99998,50000
-Splay,search,sorted,50000,0.000000,0,336780,50000
-Splay,delete,sorted,50000,0.000000,72521,286782,0
-AVL,insert,reverse,50000,0.000000,49984,734465,16
-AVL,search,reverse,50000,0.000000,0,734481,16
-AVL,delete,reverse,50000,0.000000,24985,560198,16
-RB,insert,reverse,50000,0.000000,49971,1286225,29
-RB,search,reverse,50000,0.010000,0,704794,29
-RB,delete,reverse,50000,0.000000,24986,614183,29
-Splay,insert,reverse,50000,0.000000,0,99998,50000
-Splay,search,reverse,50000,0.000000,0,336780,50000
-Splay,delete,reverse,50000,0.000000,93390,315912,0
-AVL,insert,random,100000,0.040000,69924,1546186,20
-AVL,search,random,100000,0.010000,0,1592570,20
-AVL,delete,random,100000,0.020000,39802,1532839,20
-RB,insert,random,100000,0.020000,58552,1553616,20
-RB,search,random,100000,0.010000,0,1500178,20
-RB,delete,random,100000,0.030000,41776,1302907,20
-Splay,insert,random,100000,0.030000,950264,3518330,59
-Splay,search,random,100000,0.030000,0,3173900,44
-Splay,delete,random,100000,0.030000,1068139,3736304,0
-AVL,insert,sorted,100000,0.000000,99983,1568929,17
-AVL,search,sorted,100000,0.010000,0,1568946,17
-AVL,delete,sorted,100000,0.000000,49984,1195394,17
-RB,insert,sorted,100000,0.010000,99969,2772389,31
-RB,search,sorted,100000,0.000000,0,1509564,31
-RB,delete,sorted,100000,0.000000,49985,1328344,31
-Splay,insert,sorted,100000,0.000000,0,199998,100000
-Splay,search,sorted,100000,0.010000,0,674054,100000
-Splay,delete,sorted,100000,0.000000,144937,574056,0
-AVL,insert,reverse,100000,0.020000,99983,1568929,17
-AVL,search,reverse,100000,0.000000,0,1568946,17
-AVL,delete,reverse,100000,0.000000,49984,1195394,17
-RB,insert,reverse,100000,0.010000,99969,2772389,31
-RB,search,reverse,100000,0.000000,0,1509564,31
-RB,delete,reverse,100000,0.000000,49985,1328344,31
-Splay,insert,reverse,100000,0.000000,0,199998,100000
-Splay,search,reverse,100000,0.000000,0,674054,100000
-Splay,delete,reverse,100000,0.000000,187027,631965,0`;
-
-// ── Parse CSV ─────────────────────────────────────────────────────────────────
-const rows = RAW.trim().split('\n').slice(1).map(l => {
-  const [tree, operation, pattern, n, time, rotations, comparisons, height] = l.split(',');
-  return { tree, operation, pattern, n: +n, time: +time, rotations: +rotations, comparisons: +comparisons, height: +height };
-});
+// ── State ─────────────────────────────────────────────────────────────────────
+let rows = [];
+let curPattern = 'random', curMetric = 'rotations', curOp = 'insert';
 
 const SIZES  = [1000, 5000, 10000, 50000, 100000];
 const TREES  = ['AVL', 'RB', 'Splay'];
-const COLORS = { AVL: '#00e5ff', RB: '#ff4f7b', Splay: '#a78bfa' };
+const COLORS = { AVL: '#dc2626', RB: '#2563eb', Splay: '#16a34a' };
+const FILLS  = { AVL: 'rgba(220,38,38,0.08)', RB: 'rgba(37,99,235,0.08)', Splay: 'rgba(22,163,74,0.08)' };
 const LABELS = { AVL: 'AVL Tree', RB: 'Red-Black', Splay: 'Splay Tree' };
+const ROW_CLS= { AVL: 'avl-row', RB: 'rb-row', Splay: 'splay-row' };
 
-// state
-let curPattern = 'random', curMetric = 'rotations', curOp = 'insert';
-
-// ── Chart defaults ────────────────────────────────────────────────────────────
-Chart.defaults.color = '#64748b';
-Chart.defaults.font.family = 'DM Sans';
-const gridColor = 'rgba(37,45,69,0.8)';
-
-function baseOptions(title) {
-  return {
-    responsive: true,
-    animation: { duration: 500, easing: 'easeInOutQuart' },
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: '#1a2035',
-        borderColor: '#252d45', borderWidth: 1,
-        titleFont: { family: 'Space Mono', size: 11 },
-        bodyFont: { family: 'DM Sans', size: 12 },
-        padding: 10,
-        callbacks: { label: ctx => `  ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}` }
-      }
-    },
-    scales: {
-      x: { grid: { color: gridColor }, ticks: { font: { family: 'Space Mono', size: 10 } } },
-      y: { grid: { color: gridColor }, ticks: { font: { family: 'Space Mono', size: 10 } } }
-    }
-  };
+// ── CSV parse ─────────────────────────────────────────────────────────────────
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/).filter(Boolean);
+  const header = lines[0].split(',').map(h => h.trim());
+  return lines.slice(1).map(line => {
+    const vals = line.split(',').map(v => v.trim());
+    const obj  = {};
+    header.forEach((h, i) => obj[h] = vals[i] || '0');
+    return {
+      tree:        obj.tree,
+      operation:   obj.operation,
+      pattern:     obj.pattern,
+      n:           +obj.n,
+      time:        +obj.time,
+      rotations:   +obj.rotations,
+      comparisons: +obj.comparisons,
+      height:      +(obj.height || 0),
+    };
+  }).filter(r => r.tree && r.operation && r.n);
 }
 
-// ── Lookup helper ─────────────────────────────────────────────────────────────
+document.getElementById('csvFile').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      rows = parseCSV(ev.target.result);
+      const el = document.getElementById('uploadStatus');
+      el.textContent = `✓  Loaded ${rows.length} rows from ${file.name}`;
+      el.className = 'ok';
+      renderAll();
+    } catch(err) {
+      document.getElementById('uploadStatus').textContent = '✗  Failed to parse CSV';
+      document.getElementById('uploadStatus').className = 'err';
+    }
+  };
+  reader.readAsText(file);
+});
+
+// ── Lookup ────────────────────────────────────────────────────────────────────
 function get(tree, op, pattern, n, metric) {
-  const r = rows.find(r => r.tree === tree && r.operation === op && r.pattern === pattern && r.n === n);
+  const r = rows.find(r =>
+    r.tree === tree && r.operation === op &&
+    r.pattern === pattern && r.n === n
+  );
   return r ? r[metric] : 0;
 }
 
-// ── Chart instances ───────────────────────────────────────────────────────────
-let metricChartInst, heightChartInst, barChartInst;
+// ── Chart config ──────────────────────────────────────────────────────────────
+Chart.defaults.color      = '#666666';
+Chart.defaults.font.family = 'DM Mono, monospace';
+const gridCol = 'rgba(0,0,0,0.07)';
 
-function makeDataset(tree, values) {
-  const c = COLORS[tree];
+function baseOpts(extra) {
   return {
-    label: LABELS[tree],
-    data: values,
-    borderColor: c,
-    backgroundColor: c + '22',
-    pointBackgroundColor: c,
-    pointRadius: 4, pointHoverRadius: 6,
-    borderWidth: 2, tension: 0.35, fill: true
+    responsive: true,
+    animation: { duration: 400 },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#111',
+        borderColor: '#111', borderWidth: 1,
+        titleFont: { size: 11, weight: '700', family: 'DM Mono' },
+        bodyFont:  { size: 11, family: 'DM Mono' },
+        padding: 10,
+        callbacks: {
+          label: ctx => `  ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}`
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: { color: gridCol },
+        ticks: { font: { size: 10, family: 'DM Mono' } }
+      },
+      y: {
+        grid: { color: gridCol },
+        ticks: { font: { size: 10, family: 'DM Mono' } }
+      }
+    },
+    ...extra
   };
 }
 
-// ── Metric line chart ─────────────────────────────────────────────────────────
-function buildMetricChart() {
-  const ctx = document.getElementById('metricChart').getContext('2d');
-  const labels = SIZES.map(n => n >= 1000 ? n/1000+'K' : n);
-  const datasets = TREES.map(t =>
-    makeDataset(t, SIZES.map(n => get(t, curOp, curPattern, n, curMetric)))
-  );
-  if (metricChartInst) metricChartInst.destroy();
-  const opts = baseOptions();
-  metricChartInst = new Chart(ctx, { type: 'line', data: { labels, datasets }, options: opts });
-  document.getElementById('metricChartTitle').textContent =
-    `${curMetric.charAt(0).toUpperCase()+curMetric.slice(1)} — ${curOp.charAt(0).toUpperCase()+curOp.slice(1)}`;
+function makeLineDS(tree, values) {
+  const c = COLORS[tree];
+  return {
+    label: LABELS[tree], data: values,
+    borderColor: c,
+    backgroundColor: FILLS[tree],
+    pointBackgroundColor: '#fff',
+    pointBorderColor: c,
+    pointBorderWidth: 2,
+    pointRadius: 5, pointHoverRadius: 7,
+    borderWidth: 2.5, tension: 0.3, fill: true
+  };
 }
 
-// ── Height chart ──────────────────────────────────────────────────────────────
+let metricInst, heightInst, barInst;
+const sizeLabels = SIZES.map(n => n >= 1000 ? n/1000+'K' : n);
+
+function buildMetricChart() {
+  const ctx = document.getElementById('metricChart').getContext('2d');
+  const datasets = TREES.map(t =>
+    makeLineDS(t, SIZES.map(n => get(t, curOp, curPattern, n, curMetric)))
+  );
+  if (metricInst) metricInst.destroy();
+  metricInst = new Chart(ctx, {
+    type: 'line',
+    data: { labels: sizeLabels, datasets },
+    options: baseOpts()
+  });
+  document.getElementById('metricChartTitle').textContent =
+    curMetric[0].toUpperCase()+curMetric.slice(1) + ' — ' +
+    curOp[0].toUpperCase()+curOp.slice(1);
+}
+
 function buildHeightChart() {
   const ctx = document.getElementById('heightChart').getContext('2d');
-  const labels = SIZES.map(n => n >= 1000 ? n/1000+'K' : n);
-  const log2 = SIZES.map(n => Math.round(Math.log2(n)));
-
-  const datasets = TREES.map(t => makeDataset(t, SIZES.map(n => get(t, 'insert', curPattern, n, 'height'))));
+  const datasets = TREES.map(t =>
+    makeLineDS(t, SIZES.map(n => get(t, 'insert', curPattern, n, 'height')))
+  );
   datasets.push({
-    label: 'log₂(n)', data: log2,
-    borderColor: '#f59e0b', borderDash: [5,4],
+    label: 'log₂(n)',
+    data: SIZES.map(n => Math.round(Math.log2(n))),
+    borderColor: '#999', borderDash: [5,4],
     pointRadius: 0, borderWidth: 1.5,
     backgroundColor: 'transparent', tension: 0.2
   });
-
-  if (heightChartInst) heightChartInst.destroy();
-  heightChartInst = new Chart(ctx, { type: 'line', data: { labels, datasets }, options: baseOptions() });
+  if (heightInst) heightInst.destroy();
+  heightInst = new Chart(ctx, {
+    type: 'line',
+    data: { labels: sizeLabels, datasets },
+    options: baseOpts()
+  });
 }
 
-// ── Bar chart ─────────────────────────────────────────────────────────────────
 function buildBarChart() {
   const ctx = document.getElementById('barChart').getContext('2d');
-  const ops = ['insert', 'delete'];
-  const labels = ['Insert Rotations', 'Delete Rotations'];
   const n = 100000;
-
   const datasets = TREES.map(t => ({
     label: LABELS[t],
-    data: ops.map(op => get(t, op, curPattern, n, 'rotations')),
-    backgroundColor: COLORS[t] + 'cc',
+    data: ['insert','delete'].map(op => get(t, op, curPattern, n, 'rotations')),
+    backgroundColor: FILLS[t],
     borderColor: COLORS[t],
-    borderWidth: 1, borderRadius: 5
+    borderWidth: 2,
+    borderRadius: 2
   }));
-
-  if (barChartInst) barChartInst.destroy();
-  const opts = baseOptions();
+  if (barInst) barInst.destroy();
+  const opts = baseOpts();
   opts.scales.x.grid = { display: false };
-  barChartInst = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: opts });
+  barInst = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: ['Insert Rotations', 'Delete Rotations'], datasets },
+    options: opts
+  });
 }
 
-// ── Stats row ─────────────────────────────────────────────────────────────────
 function buildStats() {
   const n = 100000;
   const metrics = [
-    { key: 'rotations', label: 'Insert Rotations', op: 'insert' },
-    { key: 'comparisons', label: 'Search Comparisons', op: 'search' },
-    { key: 'height', label: 'Tree Height', op: 'insert' }
+    { key: 'rotations',   label: 'Insert Rotations',   op: 'insert' },
+    { key: 'comparisons', label: 'Search Comparisons',  op: 'search' },
+    { key: 'height',      label: 'Tree Height',          op: 'insert' },
   ];
-  const el = document.getElementById('statsRow');
-  el.innerHTML = metrics.map(m => {
+  document.getElementById('statsRow').innerHTML = metrics.map(m => {
     const vals = TREES.map(t => ({ tree: t, val: get(t, m.op, curPattern, n, m.key) }));
-    const min = Math.min(...vals.map(v => v.val));
+    const minVal = Math.min(...vals.filter(v=>v.val>0).map(v => v.val));
     return `<div class="stat-card">
       <div class="stat-label">${m.label} (n=100K)</div>
       <div class="stat-values">
         ${vals.map(v => `
-          <div class="stat-item">
+          <div class="stat-item ${ROW_CLS[v.tree]}">
             <span class="stat-name tree-${v.tree.toLowerCase()}">${LABELS[v.tree]}</span>
-            <span class="stat-val" style="color:${v.val === min ? '#4ade80' : 'var(--text)'}">${v.val.toLocaleString()}</span>
+            <span class="stat-val${v.val===minVal&&v.val>0?' winner':''}">
+              ${v.val.toLocaleString()}
+            </span>
           </div>`).join('')}
       </div>
     </div>`;
   }).join('');
-  document.getElementById('statSubtitle').textContent = curPattern.charAt(0).toUpperCase() + curPattern.slice(1) + ' pattern';
+  document.getElementById('statSubtitle').textContent =
+    curPattern[0].toUpperCase()+curPattern.slice(1) + ' pattern — green value = best (lowest)';
 }
 
-// ── Table ─────────────────────────────────────────────────────────────────────
 function buildTable() {
   const filtered = rows.filter(r => r.pattern === curPattern);
   const cls = { AVL: 'tree-avl', RB: 'tree-rb', Splay: 'tree-splay' };
-  document.getElementById('tableBody').innerHTML = filtered.map(r => `
-    <tr>
-      <td class="${cls[r.tree]}">${r.tree}</td>
-      <td>${r.operation}</td>
-      <td class="num">${r.n.toLocaleString()}</td>
-      <td class="num">${r.rotations.toLocaleString()}</td>
-      <td class="num">${r.comparisons.toLocaleString()}</td>
-      <td class="num">${r.height}</td>
-      <td class="num">${r.time.toFixed(3)}</td>
-    </tr>`).join('');
-  document.getElementById('tableSubtitle').textContent = `Showing: ${curPattern.charAt(0).toUpperCase()+curPattern.slice(1)} pattern`;
+  document.getElementById('tableBody').innerHTML = filtered.length
+    ? filtered.map(r => `
+        <tr>
+          <td class="${cls[r.tree]||''}">${r.tree}</td>
+          <td>${r.operation}</td>
+          <td>${r.n.toLocaleString()}</td>
+          <td>${r.rotations.toLocaleString()}</td>
+          <td>${r.comparisons.toLocaleString()}</td>
+          <td>${r.height}</td>
+          <td>${r.time.toFixed(3)}</td>
+        </tr>`).join('')
+    : `<tr><td colspan="7">
+         <div class="empty-state">
+           <strong>No Data</strong>Upload your results.csv to see the table
+         </div>
+       </td></tr>`;
+  document.getElementById('tableSubtitle').textContent =
+    'Showing: ' + curPattern[0].toUpperCase()+curPattern.slice(1) + ' pattern';
 }
 
-// ── Insights ──────────────────────────────────────────────────────────────────
-const INSIGHTS = {
-  random: [
-    { head: 'Balanced Performance', text: 'AVL and RB trees perform similarly on random data. RB uses ~16% fewer rotations on insert due to its relaxed balance constraint.' },
-    { head: 'Splay Overhead', text: 'Splay tree uses ~13× more rotations than AVL on random insert because every operation restructures the tree.' },
-    { head: 'Height Parity', text: 'At n=100K all three achieve height ~20, confirming O(log n) balance — except Splay which reaches ~59.' }
-  ],
-  sorted: [
-    { head: 'AVL Wins on Rotations', text: 'On sorted input AVL and RB rotations are nearly equal, but RB needs 2.8× more comparisons during insert due to recoloring.' },
-    { head: 'Splay Degenerates', text: 'Sorted input is Splay\'s worst case: height reaches n=100,000 after insert, forming a linear chain before each splay.' },
-    { head: 'Search Savings', text: 'After sorting, Splay\'s repeated search is efficient — recently accessed nodes stay near root, matching AVL comparisons.' }
-  ],
-  reverse: [
-    { head: 'Mirror of Sorted', text: 'Reverse input produces identical rotation counts to sorted for AVL and RB — both handle worst-case insertions symmetrically.' },
-    { head: 'Splay Zero Rotations', text: 'Splay insert on reverse data does 0 rotations — each new minimum goes directly to the left without restructuring.' },
-    { head: 'RB Delete Cost', text: 'Red-Black delete on reverse input requires the most comparisons of any tree-operation combo due to complex fixup cases.' }
-  ]
-};
-
-function buildInsights() {
-  document.getElementById('insightsBox').innerHTML = INSIGHTS[curPattern].map(i =>
-    `<div class="insight"><div class="insight-head">${i.head}</div><p>${i.text}</p></div>`
-  ).join('');
-}
-
-// ── Render all ────────────────────────────────────────────────────────────────
 function renderAll() {
   buildMetricChart();
   buildHeightChart();
   buildBarChart();
   buildStats();
   buildTable();
-  buildInsights();
 }
 
-// ── Tab event listeners ───────────────────────────────────────────────────────
-document.getElementById('patternTabs').addEventListener('click', e => {
-  if (!e.target.dataset.val) return;
-  document.querySelectorAll('#patternTabs .tab').forEach(t => t.classList.remove('active'));
-  e.target.classList.add('active');
-  curPattern = e.target.dataset.val;
-  renderAll();
-});
+// ── Tab listeners ─────────────────────────────────────────────────────────────
+function bindTabs(groupId, onChange) {
+  document.getElementById(groupId).addEventListener('click', e => {
+    if (!e.target.dataset.val) return;
+    document.querySelectorAll(`#${groupId} .tab, #${groupId} .inner-tab`)
+      .forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+    onChange(e.target.dataset.val);
+  });
+}
 
-document.getElementById('metricTabs').addEventListener('click', e => {
-  if (!e.target.dataset.val) return;
-  document.querySelectorAll('#metricTabs .tab').forEach(t => t.classList.remove('active'));
-  e.target.classList.add('active');
-  curMetric = e.target.dataset.val;
-  buildMetricChart();
-});
-
-document.getElementById('opTabs').addEventListener('click', e => {
-  if (!e.target.dataset.val) return;
-  document.querySelectorAll('#opTabs .tab').forEach(t => t.classList.remove('active'));
-  e.target.classList.add('active');
-  curOp = e.target.dataset.val;
-  buildMetricChart();
-});
+bindTabs('patternTabs', v => { curPattern = v; renderAll(); });
+bindTabs('metricTabs',  v => { curMetric  = v; buildMetricChart(); });
+bindTabs('opTabs',      v => { curOp      = v; buildMetricChart(); });
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 renderAll();
