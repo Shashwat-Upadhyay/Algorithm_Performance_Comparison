@@ -14,12 +14,18 @@
     --text:     #111111;
     --muted:    #666666;
     --light:    #e8e8e8;
+    /* BST colours */
     --avl:      #dc2626;
     --rb:       #2563eb;
     --splay:    #16a34a;
     --avl-bg:   rgba(220,38,38,0.08);
     --rb-bg:    rgba(37,99,235,0.08);
     --splay-bg: rgba(22,163,74,0.08);
+    /* B-Tree colours */
+    --btree:    #7C3AED;
+    --bplus:    #D97706;
+    --btree-bg: rgba(124,58,237,0.08);
+    --bplus-bg: rgba(217,119,6,0.08);
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -39,33 +45,37 @@
     display: flex; align-items: center;
     justify-content: space-between; flex-wrap: wrap; gap: 1rem;
   }
-
   .header-left { display: flex; flex-direction: column; gap: .2rem; }
-
   h1 {
     font-family: 'Bebas Neue', sans-serif;
     font-size: clamp(2rem, 4vw, 3rem);
-    letter-spacing: .05em;
-    color: var(--text);
-    line-height: 1;
+    letter-spacing: .05em; color: var(--text); line-height: 1;
   }
-
   .header-sub {
     font-size: .78rem; color: var(--muted);
     letter-spacing: .12em; text-transform: uppercase; font-weight: 400;
   }
+  .legend { display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center; }
+  .legend-item { display: flex; align-items: center; gap: .55rem; font-size: .82rem; font-weight: 700; letter-spacing: .04em; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 2px; border: 2px solid var(--border); }
 
-  .legend {
-    display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;
+  /* ── main section tabs (BST / B-Tree) ───────────────────────────────────── */
+  .section-tabs {
+    background: var(--white);
+    border-bottom: 2px solid var(--border);
+    padding: 0 3rem;
+    display: flex; gap: 0;
   }
-  .legend-item {
-    display: flex; align-items: center; gap: .55rem;
-    font-size: .82rem; font-weight: 700; letter-spacing: .04em;
+  .section-tab {
+    padding: .9rem 2rem;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem; letter-spacing: .08em;
+    border: none; border-bottom: 3px solid transparent;
+    background: transparent; color: var(--muted);
+    cursor: pointer; transition: all .15s;
   }
-  .legend-dot {
-    width: 12px; height: 12px; border-radius: 2px;
-    border: 2px solid var(--border);
-  }
+  .section-tab:hover { color: var(--text); }
+  .section-tab.active { color: var(--text); border-bottom-color: var(--text); }
 
   /* ── upload bar ──────────────────────────────────────────────────────────── */
   .upload-bar {
@@ -74,30 +84,21 @@
     padding: .7rem 3rem;
     display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap;
   }
-  .upload-bar span {
-    font-size: .7rem; color: var(--muted);
-    text-transform: uppercase; letter-spacing: .12em; font-weight: 700;
-  }
+  .upload-bar span { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; font-weight: 700; }
   .upload-bar input[type=file] {
     font-size: .78rem; color: var(--text);
-    border: 1.5px solid var(--border);
-    border-radius: 4px; padding: .28rem .7rem;
-    background: var(--white); cursor: pointer;
+    border: 1.5px solid var(--border); border-radius: 4px;
+    padding: .28rem .7rem; background: var(--white); cursor: pointer;
     font-family: 'DM Mono', monospace;
   }
   .upload-bar input[type=file]::file-selector-button {
-    background: var(--text); color: white;
-    border: none; padding: .25rem .65rem;
-    border-radius: 3px; cursor: pointer;
-    font-size: .72rem; font-weight: 700;
-    margin-right: .6rem; letter-spacing: .05em;
+    background: var(--text); color: white; border: none;
+    padding: .25rem .65rem; border-radius: 3px; cursor: pointer;
+    font-size: .72rem; font-weight: 700; margin-right: .6rem; letter-spacing: .05em;
   }
-  #uploadStatus {
-    font-family: 'DM Mono', monospace;
-    font-size: .72rem; color: var(--muted);
-  }
-  #uploadStatus.ok  { color: var(--splay); font-weight: 500; }
-  #uploadStatus.err { color: var(--avl);   font-weight: 500; }
+  .status { font-family: 'DM Mono', monospace; font-size: .72rem; color: var(--muted); }
+  .status.ok  { color: var(--splay); font-weight: 500; }
+  .status.err { color: var(--avl);   font-weight: 500; }
 
   /* ── controls ────────────────────────────────────────────────────────────── */
   .controls {
@@ -106,167 +107,100 @@
     padding: .9rem 3rem;
     display: flex; align-items: center; gap: 1.4rem; flex-wrap: wrap;
   }
-  .ctrl-label {
-    font-family: 'DM Mono', monospace;
-    font-size: .65rem; letter-spacing: .15em;
-    text-transform: uppercase; color: var(--muted); font-weight: 500;
-  }
+  .ctrl-label { font-family: 'DM Mono', monospace; font-size: .65rem; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
   .tab-group { display: flex; gap: 0; }
   .tab {
-    padding: .38rem 1rem;
-    border: 1.5px solid var(--border);
-    background: var(--white);
-    color: var(--muted);
-    font-family: 'Lato', sans-serif;
-    font-size: .78rem; font-weight: 700;
-    cursor: pointer;
-    transition: all .15s;
-    letter-spacing: .04em;
-    margin-left: -1.5px;
+    padding: .38rem 1rem; border: 1.5px solid var(--border);
+    background: var(--white); color: var(--muted);
+    font-family: 'Lato', sans-serif; font-size: .78rem; font-weight: 700;
+    cursor: pointer; transition: all .15s; letter-spacing: .04em; margin-left: -1.5px;
   }
   .tab:first-child { border-radius: 4px 0 0 4px; margin-left: 0; }
   .tab:last-child  { border-radius: 0 4px 4px 0; }
   .tab:hover { background: var(--light); color: var(--text); z-index: 1; }
-  .tab.active {
-    background: var(--text);
-    color: var(--white);
-    z-index: 2;
-  }
+  .tab.active { background: var(--text); color: var(--white); z-index: 2; }
 
   /* ── main grid ───────────────────────────────────────────────────────────── */
-  main {
-    padding: 2rem 3rem 3rem;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-  }
+  main { padding: 2rem 3rem 3rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .section { display: none; }
+  .section.active { display: contents; }
 
   /* ── cards ───────────────────────────────────────────────────────────────── */
   .card {
-    background: var(--white);
-    border: 2px solid var(--border);
-    border-radius: 0;
-    padding: 1.4rem 1.6rem;
-    box-shadow: 4px 4px 0 var(--border);
-    transition: box-shadow .15s, transform .15s;
+    background: var(--white); border: 2px solid var(--border);
+    border-radius: 0; padding: 1.4rem 1.6rem;
+    box-shadow: 4px 4px 0 var(--border); transition: box-shadow .15s, transform .15s;
   }
-  .card:hover {
-    box-shadow: 6px 6px 0 var(--border);
-    transform: translate(-1px, -1px);
-  }
+  .card:hover { box-shadow: 6px 6px 0 var(--border); transform: translate(-1px, -1px); }
   .card.full { grid-column: 1 / -1; }
-
-  .card-header {
-    display: flex; align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 1.2rem;
-    padding-bottom: .8rem;
-    border-bottom: 1px solid var(--light);
-  }
-  .card-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.05rem; letter-spacing: .08em;
-    color: var(--text);
-  }
-  .card-subtitle {
-    font-size: .72rem; color: var(--muted);
-    margin-top: .15rem; font-weight: 400;
-  }
-
+  .card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.2rem; padding-bottom: .8rem; border-bottom: 1px solid var(--light); }
+  .card-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.05rem; letter-spacing: .08em; color: var(--text); }
+  .card-subtitle { font-size: .72rem; color: var(--muted); margin-top: .15rem; font-weight: 400; }
   canvas { width: 100% !important; }
 
   /* ── stat cards ──────────────────────────────────────────────────────────── */
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-  }
-  .stat-card {
-    border: 1.5px solid var(--border);
-    border-radius: 0;
-    padding: 1rem 1.2rem;
-    box-shadow: 3px 3px 0 var(--border);
-  }
-  .stat-label {
-    font-family: 'DM Mono', monospace;
-    font-size: .62rem; color: var(--muted);
-    text-transform: uppercase; letter-spacing: .1em;
-    margin-bottom: .6rem; font-weight: 500;
-  }
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .stats-row-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .stat-card { border: 1.5px solid var(--border); border-radius: 0; padding: 1rem 1.2rem; box-shadow: 3px 3px 0 var(--border); }
+  .stat-label { font-family: 'DM Mono', monospace; font-size: .62rem; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; margin-bottom: .6rem; font-weight: 500; }
   .stat-values { display: flex; flex-direction: column; gap: .35rem; }
-  .stat-item {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: .3rem .5rem; border-radius: 3px;
-  }
+  .stat-item { display: flex; justify-content: space-between; align-items: center; padding: .3rem .5rem; border-radius: 3px; }
   .stat-item.avl-row   { background: var(--avl-bg); }
   .stat-item.rb-row    { background: var(--rb-bg);  }
   .stat-item.splay-row { background: var(--splay-bg); }
+  .stat-item.btree-row  { background: var(--btree-bg); }
+  .stat-item.bplus-row  { background: var(--bplus-bg); }
   .stat-name { font-size: .78rem; font-weight: 700; }
-  .stat-val {
-    font-family: 'DM Mono', monospace;
-    font-size: .78rem; font-weight: 500;
-  }
-  .stat-val.winner {
-    color: var(--splay);
-    font-weight: 700;
-  }
+  .stat-val  { font-family: 'DM Mono', monospace; font-size: .78rem; font-weight: 500; }
+  .stat-val.winner { color: var(--splay); font-weight: 700; }
+  .stat-val.winner-bt { color: var(--btree); font-weight: 700; }
 
   /* ── table ───────────────────────────────────────────────────────────────── */
   .tbl-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: .8rem; }
-  th {
-    font-family: 'DM Mono', monospace;
-    font-size: .62rem; letter-spacing: .1em;
-    text-transform: uppercase; color: var(--muted);
-    text-align: left; padding: .55rem .8rem;
-    border-bottom: 2px solid var(--border);
-    background: var(--bg); font-weight: 500;
-  }
-  td {
-    padding: .5rem .8rem;
-    border-bottom: 1px solid var(--light);
-    font-family: 'DM Mono', monospace; font-size: .75rem;
-  }
+  th { font-family: 'DM Mono', monospace; font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); text-align: left; padding: .55rem .8rem; border-bottom: 2px solid var(--border); background: var(--bg); font-weight: 500; }
+  td { padding: .5rem .8rem; border-bottom: 1px solid var(--light); font-family: 'DM Mono', monospace; font-size: .75rem; }
   td:first-child { font-family: 'Lato', sans-serif; font-size: .8rem; }
   td:nth-child(2){ font-family: 'Lato', sans-serif; }
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: var(--bg); }
-
   .tree-avl   { color: var(--avl);   font-weight: 700; }
   .tree-rb    { color: var(--rb);    font-weight: 700; }
   .tree-splay { color: var(--splay); font-weight: 700; }
+  .tree-btree  { color: var(--btree); font-weight: 700; }
+  .tree-bplus  { color: var(--bplus); font-weight: 700; }
 
-  /* ── op tabs inside card ─────────────────────────────────────────────────── */
-  .inner-tabs {
-    display: flex; gap: 0; margin-bottom: 1.2rem;
-  }
+  /* ── inner op tabs ───────────────────────────────────────────────────────── */
+  .inner-tabs { display: flex; gap: 0; margin-bottom: 1.2rem; }
   .inner-tab {
-    padding: .3rem .85rem;
-    border: 1.5px solid var(--border);
+    padding: .3rem .85rem; border: 1.5px solid var(--border);
     background: var(--white); color: var(--muted);
-    font-family: 'Lato', sans-serif;
-    font-size: .75rem; font-weight: 700;
-    cursor: pointer; transition: all .15s;
-    margin-left: -1.5px; letter-spacing: .04em;
+    font-family: 'Lato', sans-serif; font-size: .75rem; font-weight: 700;
+    cursor: pointer; transition: all .15s; margin-left: -1.5px; letter-spacing: .04em;
   }
   .inner-tab:first-child { border-radius: 3px 0 0 3px; margin-left: 0; }
   .inner-tab:last-child  { border-radius: 0 3px 3px 0; }
-  .inner-tab:hover { background: var(--light); color: var(--text); z-index:1; }
+  .inner-tab:hover  { background: var(--light); color: var(--text); z-index:1; }
   .inner-tab.active { background: var(--text); color: white; z-index: 2; }
 
-  /* ── empty state ─────────────────────────────────────────────────────────── */
-  .empty-state {
-    text-align: center; padding: 2.5rem 1rem;
-    color: var(--muted); font-size: .82rem;
-    font-family: 'DM Mono', monospace;
+  /* ── badge ───────────────────────────────────────────────────────────────── */
+  .badge {
+    display: inline-block; font-family: 'DM Mono', monospace;
+    font-size: .6rem; font-weight: 700; letter-spacing: .08em;
+    padding: .15rem .5rem; border-radius: 2px;
+    text-transform: uppercase; vertical-align: middle; margin-left: .5rem;
   }
+  .badge-btree { background: var(--btree-bg); color: var(--btree); border: 1px solid var(--btree); }
+  .badge-bplus { background: var(--bplus-bg); color: var(--bplus); border: 1px solid var(--bplus); }
+
+  .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: .82rem; font-family: 'DM Mono', monospace; }
   .empty-state strong { display: block; font-size: 1rem; margin-bottom: .4rem; color: var(--text); }
 
   @media (max-width: 900px) {
     main { grid-template-columns: 1fr; padding: 1rem 1.2rem; }
     .card.full { grid-column: 1; }
-    header, .controls, .upload-bar { padding: 1rem 1.2rem; }
-    .stats-row { grid-template-columns: 1fr; }
+    header, .controls, .upload-bar, .section-tabs { padding: 1rem 1.2rem; }
+    .stats-row, .stats-row-2 { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -275,30 +209,29 @@
 <header>
   <div class="header-left">
     <h1>Algorithm Performance Dashboard</h1>
-    <div class="header-sub">AVL Tree &nbsp;·&nbsp; Red-Black Tree &nbsp;·&nbsp; Splay Tree</div>
+    <div class="header-sub" id="headerSub">AVL Tree &nbsp;·&nbsp; Red-Black Tree &nbsp;·&nbsp; Splay Tree</div>
   </div>
-  <div class="legend">
-    <div class="legend-item">
-      <div class="legend-dot" style="background:var(--avl)"></div>
-      <span style="color:var(--avl)">AVL Tree</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-dot" style="background:var(--rb)"></div>
-      <span style="color:var(--rb)">Red-Black Tree</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-dot" style="background:var(--splay)"></div>
-      <span style="color:var(--splay)">Splay Tree</span>
-    </div>
+  <div class="legend" id="headerLegend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--avl)"></div><span style="color:var(--avl)">AVL Tree</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--rb)"></div><span style="color:var(--rb)">Red-Black Tree</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--splay)"></div><span style="color:var(--splay)">Splay Tree</span></div>
   </div>
 </header>
 
+<!-- Section tabs: BST vs B-Tree -->
+<div class="section-tabs">
+  <button class="section-tab active" id="stBST" onclick="switchSection('bst')">BST Family</button>
+  <button class="section-tab"        id="stBT"  onclick="switchSection('btree')">B-Tree Family</button>
+</div>
+
+<!-- Upload bar (shared) -->
 <div class="upload-bar">
   <span>Load CSV</span>
   <input type="file" id="csvFile" accept=".csv" />
-  <span id="uploadStatus">Select your results.csv to populate charts</span>
+  <span id="uploadStatus" class="status">Select results.csv to populate charts</span>
 </div>
 
+<!-- Controls (shared pattern selector, plus metric/metric-bt for each section) -->
 <div class="controls">
   <span class="ctrl-label">Pattern</span>
   <div class="tab-group" id="patternTabs">
@@ -306,128 +239,243 @@
     <button class="tab" data-val="sorted">Sorted</button>
     <button class="tab" data-val="reverse">Reverse</button>
   </div>
-  <span class="ctrl-label" style="margin-left:1.5rem">Metric</span>
-  <div class="tab-group" id="metricTabs">
+
+  <!-- BST metric selector -->
+  <span class="ctrl-label bst-ctrl" style="margin-left:1.5rem">Metric</span>
+  <div class="tab-group bst-ctrl" id="metricTabs">
     <button class="tab active" data-val="rotations">Rotations</button>
     <button class="tab" data-val="comparisons">Comparisons</button>
     <button class="tab" data-val="height">Height</button>
+  </div>
+
+  <!-- B-Tree metric selector -->
+  <span class="ctrl-label bt-ctrl" style="margin-left:1.5rem;display:none">Metric</span>
+  <div class="tab-group bt-ctrl" id="metricTabsBT" style="display:none">
+    <button class="tab active" data-val="splits">Splits</button>
+    <button class="tab" data-val="comparisons">Comparisons</button>
+    <button class="tab" data-val="node_accesses">Node Accesses</button>
+    <button class="tab" data-val="height">Height</button>
+    <button class="tab" data-val="fill_factor">Fill Factor</button>
   </div>
 </div>
 
 <main>
 
-  <!-- summary -->
-  <div class="card full">
-    <div class="card-header">
-      <div>
-        <div class="card-title">Summary at n = 100,000</div>
-        <div class="card-subtitle" id="statSubtitle">Random pattern — green = best (lowest)</div>
-      </div>
-    </div>
-    <div class="stats-row" id="statsRow">
-      <div class="stat-card"><div class="empty-state"><strong>No Data</strong>Upload CSV above</div></div>
-      <div class="stat-card"><div class="empty-state"><strong>No Data</strong>Upload CSV above</div></div>
-      <div class="stat-card"><div class="empty-state"><strong>No Data</strong>Upload CSV above</div></div>
-    </div>
-  </div>
+  <!-- ══════════════════════════════════════════════════════════════════════
+       BST SECTION
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="section active" id="bst-section">
 
-  <!-- metric line chart -->
-  <div class="card full">
-    <div class="card-header">
-      <div>
-        <div class="card-title" id="metricChartTitle">Rotations — Insert</div>
-        <div class="card-subtitle">Across all input sizes</div>
+    <!-- BST Summary -->
+    <div class="card full">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Summary at n = 100,000</div>
+          <div class="card-subtitle" id="bstStatSubtitle">Random pattern — green = best (lowest)</div>
+        </div>
+      </div>
+      <div class="stats-row" id="bstStatsRow">
+        <div class="stat-card"><div class="empty-state"><strong>No Data</strong>Upload results.csv</div></div>
+        <div class="stat-card"><div class="empty-state"><strong>No Data</strong>Upload results.csv</div></div>
+        <div class="stat-card"><div class="empty-state"><strong>No Data</strong>Upload results.csv</div></div>
       </div>
     </div>
-    <div class="inner-tabs" id="opTabs">
-      <button class="inner-tab active" data-val="insert">Insert</button>
-      <button class="inner-tab" data-val="search">Search</button>
-      <button class="inner-tab" data-val="delete">Delete</button>
-    </div>
-    <canvas id="metricChart" height="95"></canvas>
-  </div>
 
-  <!-- height chart -->
-  <div class="card">
-    <div class="card-header">
-      <div>
-        <div class="card-title">Tree Height After Insert</div>
-        <div class="card-subtitle">vs log₂(n) theoretical bound</div>
+    <!-- BST Metric line chart -->
+    <div class="card full">
+      <div class="card-header">
+        <div>
+          <div class="card-title" id="bstMetricChartTitle">Rotations — Insert</div>
+          <div class="card-subtitle">Across all input sizes</div>
+        </div>
       </div>
+      <div class="inner-tabs" id="bstOpTabs">
+        <button class="inner-tab active" data-val="insert">Insert</button>
+        <button class="inner-tab" data-val="search">Search</button>
+        <button class="inner-tab" data-val="delete">Delete</button>
+      </div>
+      <canvas id="bstMetricChart" height="95"></canvas>
     </div>
-    <canvas id="heightChart" height="180"></canvas>
-  </div>
 
-  <!-- bar chart -->
-  <div class="card">
-    <div class="card-header">
-      <div>
-        <div class="card-title">Rotations at n = 100,000</div>
-        <div class="card-subtitle">Insert &amp; Delete operations</div>
+    <!-- BST Height -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Tree Height After Insert</div>
+          <div class="card-subtitle">vs log₂(n) theoretical bound</div>
+        </div>
       </div>
+      <canvas id="bstHeightChart" height="180"></canvas>
     </div>
-    <canvas id="barChart" height="180"></canvas>
-  </div>
 
-  <!-- table -->
-  <div class="card full">
-    <div class="card-header">
-      <div>
-        <div class="card-title">Full Data Table</div>
-        <div class="card-subtitle" id="tableSubtitle">Showing: Random pattern</div>
+    <!-- BST Rotations bar -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Rotations at n = 100,000</div>
+          <div class="card-subtitle">Insert &amp; Delete operations</div>
+        </div>
+      </div>
+      <canvas id="bstBarChart" height="180"></canvas>
+    </div>
+
+    <!-- BST Table -->
+    <div class="card full">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Full Data Table</div>
+          <div class="card-subtitle" id="bstTableSubtitle">Showing: Random pattern</div>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Tree</th><th>Operation</th><th>n</th><th>Rotations</th><th>Comparisons</th><th>Height</th><th>Time (s)</th></tr>
+          </thead>
+          <tbody id="bstTableBody">
+            <tr><td colspan="7"><div class="empty-state"><strong>No Data</strong>Upload results.csv</div></td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
-    <div class="tbl-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Tree</th><th>Operation</th><th>n</th>
-            <th>Rotations</th><th>Comparisons</th><th>Height</th><th>Time (s)</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody">
-          <tr><td colspan="7">
-            <div class="empty-state"><strong>No Data</strong>Upload your results.csv to see table</div>
-          </td></tr>
-        </tbody>
-      </table>
+
+  </div><!-- /bst-section -->
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       B-TREE SECTION
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="section" id="btree-section">
+
+    <!-- B-Tree Summary -->
+    <div class="card full">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Summary at n = 100,000</div>
+          <div class="card-subtitle" id="btStatSubtitle">Random pattern — purple = B-Tree best</div>
+        </div>
+      </div>
+      <div class="stats-row-2" id="btStatsRow">
+        <div class="stat-card"><div class="empty-state"><strong>No Data</strong>Upload btree_results.csv</div></div>
+        <div class="stat-card"><div class="empty-state"><strong>No Data</strong>Upload btree_results.csv</div></div>
+      </div>
     </div>
-  </div>
+
+    <!-- B-Tree Metric line chart -->
+    <div class="card full">
+      <div class="card-header">
+        <div>
+          <div class="card-title" id="btMetricChartTitle">Splits — Insert</div>
+          <div class="card-subtitle">Across all input sizes</div>
+        </div>
+      </div>
+      <div class="inner-tabs" id="btOpTabs">
+        <button class="inner-tab active" data-val="insert">Insert</button>
+        <button class="inner-tab" data-val="search">Search</button>
+        <button class="inner-tab" data-val="delete">Delete</button>
+      </div>
+      <canvas id="btMetricChart" height="95"></canvas>
+    </div>
+
+    <!-- B-Tree Height -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Tree Height After Insert</div>
+          <div class="card-subtitle">vs log₅(n) and log₄(n) theoretical bounds</div>
+        </div>
+      </div>
+      <canvas id="btHeightChart" height="180"></canvas>
+    </div>
+
+    <!-- B+ Range Query -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">B+ Tree Range Query <span class="badge badge-bplus">B+ Exclusive</span></div>
+          <div class="card-subtitle">Leaf node accesses for 10% window range query</div>
+        </div>
+      </div>
+      <canvas id="btRangeChart" height="180"></canvas>
+    </div>
+
+    <!-- B-Tree Table -->
+    <div class="card full">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Full Data Table</div>
+          <div class="card-subtitle" id="btTableSubtitle">Showing: Random pattern</div>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Tree</th><th>Operation</th><th>n</th><th>Splits</th><th>Merges</th><th>Comparisons</th><th>Node Accesses</th><th>Height</th><th>Fill %</th><th>Time (s)</th></tr>
+          </thead>
+          <tbody id="btTableBody">
+            <tr><td colspan="10"><div class="empty-state"><strong>No Data</strong>Upload btree_results.csv</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /btree-section -->
 
 </main>
 
 <script>
-// ── State ─────────────────────────────────────────────────────────────────────
-let rows = [];
-let curPattern = 'random', curMetric = 'rotations', curOp = 'insert';
+// ══════════════════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════════════════
+let bstRows = [], btRows = [];
+let curSection  = 'bst';
+let curPattern  = 'random';
+let curBSTMetric= 'rotations', curBSTOp = 'insert';
+let curBTMetric = 'splits',    curBTOp  = 'insert';
 
-const SIZES  = [1000, 5000, 10000, 50000, 100000];
-const TREES  = ['AVL', 'RB', 'Splay'];
-const COLORS = { AVL: '#dc2626', RB: '#2563eb', Splay: '#16a34a' };
-const FILLS  = { AVL: 'rgba(220,38,38,0.08)', RB: 'rgba(37,99,235,0.08)', Splay: 'rgba(22,163,74,0.08)' };
-const LABELS = { AVL: 'AVL Tree', RB: 'Red-Black', Splay: 'Splay Tree' };
-const ROW_CLS= { AVL: 'avl-row', RB: 'rb-row', Splay: 'splay-row' };
+const SIZES       = [1000, 5000, 10000, 50000, 100000];
+const SIZE_LABELS = SIZES.map(n => n >= 1000 ? n/1000+'K' : n);
 
-// ── CSV parse ─────────────────────────────────────────────────────────────────
-function parseCSV(text) {
-  const lines = text.trim().split(/\r?\n/).filter(Boolean);
+// BST config
+const BST_TREES   = ['AVL', 'RB', 'Splay'];
+const BST_COLORS  = { AVL:'#dc2626', RB:'#2563eb', Splay:'#16a34a' };
+const BST_FILLS   = { AVL:'rgba(220,38,38,0.08)', RB:'rgba(37,99,235,0.08)', Splay:'rgba(22,163,74,0.08)' };
+const BST_LABELS  = { AVL:'AVL Tree', RB:'Red-Black', Splay:'Splay Tree' };
+const BST_ROW_CLS = { AVL:'avl-row', RB:'rb-row', Splay:'splay-row' };
+
+// B-Tree config
+const BT_TREES    = ['BTree', 'BPlusTree'];
+const BT_COLORS   = { BTree:'#7C3AED', BPlusTree:'#D97706' };
+const BT_FILLS    = { BTree:'rgba(124,58,237,0.08)', BPlusTree:'rgba(217,119,6,0.08)' };
+const BT_LABELS   = { BTree:'B-Tree (order 5)', BPlusTree:'B+ Tree (order 4)' };
+const BT_ROW_CLS  = { BTree:'btree-row', BPlusTree:'bplus-row' };
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CSV PARSING
+// ══════════════════════════════════════════════════════════════════════════════
+function parseCSV(text, schema) {
+  const lines  = text.trim().split(/\r?\n/).filter(Boolean);
   const header = lines[0].split(',').map(h => h.trim());
   return lines.slice(1).map(line => {
     const vals = line.split(',').map(v => v.trim());
     const obj  = {};
     header.forEach((h, i) => obj[h] = vals[i] || '0');
-    return {
-      tree:        obj.tree,
-      operation:   obj.operation,
-      pattern:     obj.pattern,
-      n:           +obj.n,
-      time:        +obj.time,
-      rotations:   +obj.rotations,
-      comparisons: +obj.comparisons,
-      height:      +(obj.height || 0),
-    };
-  }).filter(r => r.tree && r.operation && r.n);
+    try {
+      const row = { tree: obj.tree, operation: obj.operation, pattern: obj.pattern, n: +obj.n };
+      schema.forEach(([field, type]) => {
+        row[field] = type === 'f' ? parseFloat(obj[field]||0) : parseInt(obj[field]||0, 10);
+      });
+      return (row.tree && row.operation && row.n) ? row : null;
+    } catch { return null; }
+  }).filter(Boolean);
 }
+
+const BST_SCHEMA = [
+  ['time','f'],['rotations','i'],['comparisons','i'],['height','i']
+];
+const BT_SCHEMA = [
+  ['time','f'],['splits','i'],['merges','i'],['comparisons','i'],
+  ['node_accesses','i'],['height','i'],['fill_factor','f']
+];
 
 document.getElementById('csvFile').addEventListener('change', e => {
   const file = e.target.files[0];
@@ -435,213 +483,321 @@ document.getElementById('csvFile').addEventListener('change', e => {
   const reader = new FileReader();
   reader.onload = ev => {
     try {
-      rows = parseCSV(ev.target.result);
+      const text = ev.target.result;
       const el = document.getElementById('uploadStatus');
-      el.textContent = `✓  Loaded ${rows.length} rows from ${file.name}`;
-      el.className = 'ok';
-      renderAll();
-    } catch(err) {
-      document.getElementById('uploadStatus').textContent = '✗  Failed to parse CSV';
-      document.getElementById('uploadStatus').className = 'err';
-    }
+      // Auto-detect by header
+      if (text.startsWith('tree,operation,pattern,n,time,rotations')) {
+        bstRows = parseCSV(text, BST_SCHEMA);
+        el.textContent = `✓  BST: ${bstRows.length} rows loaded from ${file.name}`;
+        el.className = 'status ok';
+        if (curSection === 'bst') renderBST();
+      } else if (text.startsWith('tree,operation,pattern,n,time,splits')) {
+        btRows = parseCSV(text, BT_SCHEMA);
+        el.textContent = `✓  B-Tree: ${btRows.length} rows loaded from ${file.name}`;
+        el.className = 'status ok';
+        if (curSection === 'btree') renderBTree();
+      } else {
+        el.textContent = '✗  Unknown CSV format';
+        el.className = 'status err';
+      }
+    } catch { document.getElementById('uploadStatus').textContent = '✗  Failed to parse'; }
   };
   reader.readAsText(file);
 });
 
-// ── Lookup ────────────────────────────────────────────────────────────────────
-function get(tree, op, pattern, n, metric) {
-  const r = rows.find(r =>
-    r.tree === tree && r.operation === op &&
-    r.pattern === pattern && r.n === n
-  );
+// ══════════════════════════════════════════════════════════════════════════════
+// LOOKUP HELPERS
+// ══════════════════════════════════════════════════════════════════════════════
+function bstGet(tree, op, pat, n, metric) {
+  const r = bstRows.find(r => r.tree===tree && r.operation===op && r.pattern===pat && r.n===n);
+  return r ? r[metric] : 0;
+}
+function btGet(tree, op, pat, n, metric) {
+  const r = btRows.find(r => r.tree===tree && r.operation===op && r.pattern===pat && r.n===n);
   return r ? r[metric] : 0;
 }
 
-// ── Chart config ──────────────────────────────────────────────────────────────
-Chart.defaults.color      = '#666666';
+// ══════════════════════════════════════════════════════════════════════════════
+// CHART CONFIG
+// ══════════════════════════════════════════════════════════════════════════════
+Chart.defaults.color = '#666666';
 Chart.defaults.font.family = 'DM Mono, monospace';
 const gridCol = 'rgba(0,0,0,0.07)';
 
-function baseOpts(extra) {
+function baseOpts(yLabel) {
   return {
-    responsive: true,
-    animation: { duration: 400 },
+    responsive: true, animation: { duration: 300 },
     plugins: {
-      legend: { display: false },
+      legend: { display: true, position: 'top',
+        labels: { font: { size: 10, family: 'DM Mono' }, boxWidth: 12 } },
       tooltip: {
-        backgroundColor: '#111',
-        borderColor: '#111', borderWidth: 1,
-        titleFont: { size: 11, weight: '700', family: 'DM Mono' },
-        bodyFont:  { size: 11, family: 'DM Mono' },
-        padding: 10,
-        callbacks: {
-          label: ctx => `  ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}`
-        }
+        backgroundColor: '#111', borderColor: '#111', borderWidth: 1,
+        titleFont: { size: 11, weight:'700', family:'DM Mono' },
+        bodyFont: { size: 11, family:'DM Mono' }, padding: 10,
+        callbacks: { label: ctx => `  ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}` }
       }
     },
     scales: {
-      x: {
-        grid: { color: gridCol },
-        ticks: { font: { size: 10, family: 'DM Mono' } }
-      },
-      y: {
-        grid: { color: gridCol },
-        ticks: { font: { size: 10, family: 'DM Mono' } }
-      }
-    },
-    ...extra
+      x: { grid: { color: gridCol }, ticks: { font: { size: 10, family:'DM Mono' } } },
+      y: { grid: { color: gridCol }, ticks: { font: { size: 10, family:'DM Mono' } },
+           title: { display: !!yLabel, text: yLabel||'', font: { size: 10 } } }
+    }
   };
 }
 
-function makeLineDS(tree, values) {
-  const c = COLORS[tree];
+function lineDS(label, color, fill, data) {
   return {
-    label: LABELS[tree], data: values,
-    borderColor: c,
-    backgroundColor: FILLS[tree],
-    pointBackgroundColor: '#fff',
-    pointBorderColor: c,
-    pointBorderWidth: 2,
-    pointRadius: 5, pointHoverRadius: 7,
+    label, data,
+    borderColor: color, backgroundColor: fill,
+    pointBackgroundColor: '#fff', pointBorderColor: color,
+    pointBorderWidth: 2, pointRadius: 5, pointHoverRadius: 7,
     borderWidth: 2.5, tension: 0.3, fill: true
   };
 }
 
-let metricInst, heightInst, barInst;
-const sizeLabels = SIZES.map(n => n >= 1000 ? n/1000+'K' : n);
-
-function buildMetricChart() {
-  const ctx = document.getElementById('metricChart').getContext('2d');
-  const datasets = TREES.map(t =>
-    makeLineDS(t, SIZES.map(n => get(t, curOp, curPattern, n, curMetric)))
-  );
-  if (metricInst) metricInst.destroy();
-  metricInst = new Chart(ctx, {
-    type: 'line',
-    data: { labels: sizeLabels, datasets },
-    options: baseOpts()
-  });
-  document.getElementById('metricChartTitle').textContent =
-    curMetric[0].toUpperCase()+curMetric.slice(1) + ' — ' +
-    curOp[0].toUpperCase()+curOp.slice(1);
+let charts = {};
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+function makeChart(id, config) {
+  destroyChart(id);
+  charts[id] = new Chart(document.getElementById(id).getContext('2d'), config);
 }
 
-function buildHeightChart() {
-  const ctx = document.getElementById('heightChart').getContext('2d');
-  const datasets = TREES.map(t =>
-    makeLineDS(t, SIZES.map(n => get(t, 'insert', curPattern, n, 'height')))
-  );
-  datasets.push({
-    label: 'log₂(n)',
-    data: SIZES.map(n => Math.round(Math.log2(n))),
-    borderColor: '#999', borderDash: [5,4],
-    pointRadius: 0, borderWidth: 1.5,
-    backgroundColor: 'transparent', tension: 0.2
-  });
-  if (heightInst) heightInst.destroy();
-  heightInst = new Chart(ctx, {
-    type: 'line',
-    data: { labels: sizeLabels, datasets },
-    options: baseOpts()
-  });
+// ══════════════════════════════════════════════════════════════════════════════
+// BST RENDERERS
+// ══════════════════════════════════════════════════════════════════════════════
+function renderBST() {
+  buildBSTMetric(); buildBSTHeight(); buildBSTBar(); buildBSTStats(); buildBSTTable();
 }
 
-function buildBarChart() {
-  const ctx = document.getElementById('barChart').getContext('2d');
-  const n = 100000;
-  const datasets = TREES.map(t => ({
-    label: LABELS[t],
-    data: ['insert','delete'].map(op => get(t, op, curPattern, n, 'rotations')),
-    backgroundColor: FILLS[t],
-    borderColor: COLORS[t],
-    borderWidth: 2,
-    borderRadius: 2
+function buildBSTMetric() {
+  const ds = BST_TREES.map(t =>
+    lineDS(BST_LABELS[t], BST_COLORS[t], BST_FILLS[t],
+           SIZES.map(n => bstGet(t, curBSTOp, curPattern, n, curBSTMetric))));
+  makeChart('bstMetricChart', { type:'line', data:{ labels:SIZE_LABELS, datasets:ds }, options:baseOpts(curBSTMetric) });
+  document.getElementById('bstMetricChartTitle').textContent =
+    curBSTMetric[0].toUpperCase()+curBSTMetric.slice(1)+' — '+curBSTOp[0].toUpperCase()+curBSTOp.slice(1);
+}
+
+function buildBSTHeight() {
+  const ds = BST_TREES.map(t =>
+    lineDS(BST_LABELS[t], BST_COLORS[t], BST_FILLS[t],
+           SIZES.map(n => bstGet(t, 'insert', curPattern, n, 'height'))));
+  ds.push({ label:'log₂(n)', data: SIZES.map(n=>Math.round(Math.log2(n))),
+    borderColor:'#999', borderDash:[5,4], pointRadius:0, borderWidth:1.5, backgroundColor:'transparent', tension:0.2 });
+  makeChart('bstHeightChart', { type:'line', data:{ labels:SIZE_LABELS, datasets:ds }, options:baseOpts('Height') });
+}
+
+function buildBSTBar() {
+  const ds = BST_TREES.map(t => ({
+    label: BST_LABELS[t],
+    data: ['insert','delete'].map(op => bstGet(t, op, curPattern, 100000, 'rotations')),
+    backgroundColor: BST_FILLS[t], borderColor: BST_COLORS[t], borderWidth: 2, borderRadius: 2
   }));
-  if (barInst) barInst.destroy();
-  const opts = baseOpts();
+  const opts = baseOpts('Rotations');
   opts.scales.x.grid = { display: false };
-  barInst = new Chart(ctx, {
+  makeChart('bstBarChart', { type:'bar', data:{ labels:['Insert','Delete'], datasets:ds }, options:opts });
+}
+
+function buildBSTStats() {
+  const metrics = [
+    { key:'rotations',   label:'Insert Rotations',   op:'insert' },
+    { key:'comparisons', label:'Search Comparisons',  op:'search' },
+    { key:'height',      label:'Tree Height',          op:'insert' },
+  ];
+  document.getElementById('bstStatsRow').innerHTML = metrics.map(m => {
+    const vals = BST_TREES.map(t => ({ tree:t, val: bstGet(t, m.op, curPattern, 100000, m.key) }));
+    const minV = Math.min(...vals.filter(v=>v.val>0).map(v=>v.val));
+    return `<div class="stat-card">
+      <div class="stat-label">${m.label} (n=100K)</div>
+      <div class="stat-values">
+        ${vals.map(v=>`
+          <div class="stat-item ${BST_ROW_CLS[v.tree]}">
+            <span class="stat-name tree-${v.tree.toLowerCase()}">${BST_LABELS[v.tree]}</span>
+            <span class="stat-val${v.val===minV&&v.val>0?' winner':''}">${v.val.toLocaleString()}</span>
+          </div>`).join('')}
+      </div></div>`;
+  }).join('');
+  document.getElementById('bstStatSubtitle').textContent =
+    curPattern[0].toUpperCase()+curPattern.slice(1)+' pattern — green value = best (lowest)';
+}
+
+function buildBSTTable() {
+  const cls = { AVL:'tree-avl', RB:'tree-rb', Splay:'tree-splay' };
+  const filtered = bstRows.filter(r => r.pattern === curPattern);
+  document.getElementById('bstTableBody').innerHTML = filtered.length
+    ? filtered.map(r=>`<tr>
+        <td class="${cls[r.tree]||''}">${r.tree}</td>
+        <td>${r.operation}</td><td>${r.n.toLocaleString()}</td>
+        <td>${r.rotations.toLocaleString()}</td><td>${r.comparisons.toLocaleString()}</td>
+        <td>${r.height}</td><td>${r.time.toFixed(4)}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="7"><div class="empty-state"><strong>No Data</strong>Upload results.csv</div></td></tr>`;
+  document.getElementById('bstTableSubtitle').textContent = 'Showing: '+curPattern[0].toUpperCase()+curPattern.slice(1)+' pattern';
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// B-TREE RENDERERS
+// ══════════════════════════════════════════════════════════════════════════════
+function renderBTree() {
+  buildBTMetric(); buildBTHeight(); buildBTRange(); buildBTStats(); buildBTTable();
+}
+
+function buildBTMetric() {
+  const ds = BT_TREES.map(t =>
+    lineDS(BT_LABELS[t], BT_COLORS[t], BT_FILLS[t],
+           SIZES.map(n => btGet(t, curBTOp, curPattern, n, curBTMetric))));
+  makeChart('btMetricChart', { type:'line', data:{ labels:SIZE_LABELS, datasets:ds }, options:baseOpts(curBTMetric) });
+  const metricDisplay = { splits:'Splits', comparisons:'Comparisons', node_accesses:'Node Accesses', height:'Height', fill_factor:'Fill Factor %' };
+  document.getElementById('btMetricChartTitle').textContent =
+    (metricDisplay[curBTMetric]||curBTMetric)+' — '+curBTOp[0].toUpperCase()+curBTOp.slice(1);
+}
+
+function buildBTHeight() {
+  const ds = BT_TREES.map(t =>
+    lineDS(BT_LABELS[t], BT_COLORS[t], BT_FILLS[t],
+           SIZES.map(n => btGet(t, 'insert', curPattern, n, 'height'))));
+  // theoretical references: log base 5 (B-Tree order) and log base 4 (B+ order)
+  [[5,'--'],[4,':']].forEach(([base, dash]) => {
+    ds.push({ label:`log${base}(n)`, data: SIZES.map(n=>Math.round(Math.log(n)/Math.log(base))),
+      borderColor:'#aaa', borderDash: dash===':'?[2,3]:[6,3],
+      pointRadius:0, borderWidth:1.5, backgroundColor:'transparent', tension:0.2 });
+  });
+  makeChart('btHeightChart', { type:'line', data:{ labels:SIZE_LABELS, datasets:ds }, options:baseOpts('Height') });
+}
+
+function buildBTRange() {
+  // B+ range query leaf-accesses bar chart
+  const vals = SIZES.map(n => btGet('BPlusTree', 'range_query', curPattern, n, 'node_accesses'));
+  const opts = baseOpts('Leaf Accesses');
+  opts.plugins.legend = { display: false };
+  opts.scales.x.grid = { display: false };
+  makeChart('btRangeChart', {
     type: 'bar',
-    data: { labels: ['Insert Rotations', 'Delete Rotations'], datasets },
+    data: { labels: SIZE_LABELS, datasets: [{
+      label: 'B+ Range Leaf Accesses',
+      data: vals,
+      backgroundColor: BT_FILLS['BPlusTree'],
+      borderColor: BT_COLORS['BPlusTree'],
+      borderWidth: 2, borderRadius: 3
+    }]},
     options: opts
   });
 }
 
-function buildStats() {
-  const n = 100000;
+function buildBTStats() {
   const metrics = [
-    { key: 'rotations',   label: 'Insert Rotations',   op: 'insert' },
-    { key: 'comparisons', label: 'Search Comparisons',  op: 'search' },
-    { key: 'height',      label: 'Tree Height',          op: 'insert' },
+    { key:'splits',       label:'Insert Splits',       op:'insert' },
+    { key:'node_accesses',label:'Search Node Accesses', op:'search' },
   ];
-  document.getElementById('statsRow').innerHTML = metrics.map(m => {
-    const vals = TREES.map(t => ({ tree: t, val: get(t, m.op, curPattern, n, m.key) }));
-    const minVal = Math.min(...vals.filter(v=>v.val>0).map(v => v.val));
+  document.getElementById('btStatsRow').innerHTML = metrics.map(m => {
+    const vals = BT_TREES.map(t => ({ tree:t, val: btGet(t, m.op, curPattern, 100000, m.key) }));
+    const minV = Math.min(...vals.filter(v=>v.val>0).map(v=>v.val));
     return `<div class="stat-card">
       <div class="stat-label">${m.label} (n=100K)</div>
       <div class="stat-values">
-        ${vals.map(v => `
-          <div class="stat-item ${ROW_CLS[v.tree]}">
-            <span class="stat-name tree-${v.tree.toLowerCase()}">${LABELS[v.tree]}</span>
-            <span class="stat-val${v.val===minVal&&v.val>0?' winner':''}">
-              ${v.val.toLocaleString()}
-            </span>
+        ${vals.map(v=>`
+          <div class="stat-item ${BT_ROW_CLS[v.tree]}">
+            <span class="stat-name tree-${v.tree==='BTree'?'btree':'bplus'}">${BT_LABELS[v.tree]}</span>
+            <span class="stat-val${v.val===minV&&v.val>0?' winner-bt':''}">${v.val.toLocaleString()}</span>
           </div>`).join('')}
-      </div>
-    </div>`;
+      </div></div>`;
   }).join('');
-  document.getElementById('statSubtitle').textContent =
-    curPattern[0].toUpperCase()+curPattern.slice(1) + ' pattern — green value = best (lowest)';
+  document.getElementById('btStatSubtitle').textContent =
+    curPattern[0].toUpperCase()+curPattern.slice(1)+' pattern';
 }
 
-function buildTable() {
-  const filtered = rows.filter(r => r.pattern === curPattern);
-  const cls = { AVL: 'tree-avl', RB: 'tree-rb', Splay: 'tree-splay' };
-  document.getElementById('tableBody').innerHTML = filtered.length
-    ? filtered.map(r => `
-        <tr>
-          <td class="${cls[r.tree]||''}">${r.tree}</td>
-          <td>${r.operation}</td>
-          <td>${r.n.toLocaleString()}</td>
-          <td>${r.rotations.toLocaleString()}</td>
-          <td>${r.comparisons.toLocaleString()}</td>
-          <td>${r.height}</td>
-          <td>${r.time.toFixed(3)}</td>
-        </tr>`).join('')
-    : `<tr><td colspan="7">
-         <div class="empty-state">
-           <strong>No Data</strong>Upload your results.csv to see the table
-         </div>
-       </td></tr>`;
-  document.getElementById('tableSubtitle').textContent =
-    'Showing: ' + curPattern[0].toUpperCase()+curPattern.slice(1) + ' pattern';
+function buildBTTable() {
+  const cls = { BTree:'tree-btree', BPlusTree:'tree-bplus' };
+  const filtered = btRows.filter(r => r.pattern === curPattern);
+  document.getElementById('btTableBody').innerHTML = filtered.length
+    ? filtered.map(r=>`<tr>
+        <td class="${cls[r.tree]||''}">${r.tree}</td>
+        <td>${r.operation}</td><td>${r.n.toLocaleString()}</td>
+        <td>${r.splits.toLocaleString()}</td><td>${r.merges.toLocaleString()}</td>
+        <td>${r.comparisons.toLocaleString()}</td><td>${r.node_accesses.toLocaleString()}</td>
+        <td>${r.height}</td><td>${r.fill_factor.toFixed(1)}%</td><td>${r.time.toFixed(4)}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="10"><div class="empty-state"><strong>No Data</strong>Upload btree_results.csv</div></td></tr>`;
+  document.getElementById('btTableSubtitle').textContent = 'Showing: '+curPattern[0].toUpperCase()+curPattern.slice(1)+' pattern';
 }
 
-function renderAll() {
-  buildMetricChart();
-  buildHeightChart();
-  buildBarChart();
-  buildStats();
-  buildTable();
+// ══════════════════════════════════════════════════════════════════════════════
+// SECTION SWITCHING
+// ══════════════════════════════════════════════════════════════════════════════
+const HEADER_META = {
+  bst: {
+    sub: 'AVL Tree &nbsp;·&nbsp; Red-Black Tree &nbsp;·&nbsp; Splay Tree',
+    legend: `
+      <div class="legend-item"><div class="legend-dot" style="background:var(--avl)"></div><span style="color:var(--avl)">AVL Tree</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--rb)"></div><span style="color:var(--rb)">Red-Black Tree</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--splay)"></div><span style="color:var(--splay)">Splay Tree</span></div>`
+  },
+  btree: {
+    sub: 'B-Tree (order 5) &nbsp;·&nbsp; B+ Tree (order 4)',
+    legend: `
+      <div class="legend-item"><div class="legend-dot" style="background:var(--btree)"></div><span style="color:var(--btree)">B-Tree</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--bplus)"></div><span style="color:var(--bplus)">B+ Tree</span></div>`
+  }
+};
+
+function switchSection(sec) {
+  curSection = sec;
+  document.getElementById('bst-section').classList.toggle('active', sec==='bst');
+  document.getElementById('btree-section').classList.toggle('active', sec==='btree');
+  document.getElementById('stBST').classList.toggle('active', sec==='bst');
+  document.getElementById('stBT').classList.toggle('active', sec==='btree');
+
+  // show/hide metric selectors
+  document.querySelectorAll('.bst-ctrl').forEach(el => el.style.display = sec==='bst' ? '' : 'none');
+  document.querySelectorAll('.bt-ctrl').forEach(el => el.style.display = sec==='btree' ? '' : 'none');
+
+  // update header
+  document.getElementById('headerSub').innerHTML = HEADER_META[sec].sub;
+  document.getElementById('headerLegend').innerHTML = HEADER_META[sec].legend;
+
+  if (sec==='bst') renderBST();
+  else             renderBTree();
 }
 
-// ── Tab listeners ─────────────────────────────────────────────────────────────
-function bindTabs(groupId, onChange) {
+// ══════════════════════════════════════════════════════════════════════════════
+// TAB LISTENERS
+// ══════════════════════════════════════════════════════════════════════════════
+function bindTabs(groupId, onActivate) {
   document.getElementById(groupId).addEventListener('click', e => {
-    if (!e.target.dataset.val) return;
+    const btn = e.target.closest('[data-val]');
+    if (!btn) return;
     document.querySelectorAll(`#${groupId} .tab, #${groupId} .inner-tab`)
       .forEach(t => t.classList.remove('active'));
-    e.target.classList.add('active');
-    onChange(e.target.dataset.val);
+    btn.classList.add('active');
+    onActivate(btn.dataset.val);
   });
 }
 
-bindTabs('patternTabs', v => { curPattern = v; renderAll(); });
-bindTabs('metricTabs',  v => { curMetric  = v; buildMetricChart(); });
-bindTabs('opTabs',      v => { curOp      = v; buildMetricChart(); });
+bindTabs('patternTabs', v => {
+  curPattern = v;
+  if (curSection==='bst') renderBST(); else renderBTree();
+});
+bindTabs('metricTabs', v => {
+  curBSTMetric = v;
+  buildBSTMetric();
+});
+bindTabs('metricTabsBT', v => {
+  curBTMetric = v;
+  buildBTMetric();
+});
+bindTabs('bstOpTabs', v => {
+  curBSTOp = v;
+  buildBSTMetric();
+});
+bindTabs('btOpTabs', v => {
+  curBTOp = v;
+  buildBTMetric();
+});
 
-// ── Init ──────────────────────────────────────────────────────────────────────
-renderAll();
+// ══════════════════════════════════════════════════════════════════════════════
+// INITIAL RENDER (empty state)
+// ══════════════════════════════════════════════════════════════════════════════
+renderBST();
 </script>
 </body>
 </html>

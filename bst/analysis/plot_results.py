@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from collections import defaultdict
 
-# ── Config ────────────────────────────────────────────────────────────────────
 CSV_PATH   = "../result/results.csv"
 OUT_DIR    = "graphs"
 os.makedirs(OUT_DIR, exist_ok=True)

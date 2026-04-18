@@ -59,7 +59,7 @@ void fixInsert(RBNode** root, RBNode* z) {
     while (z != *root && z->parent && z->parent->color == RED) {
         RBNode* parent = z->parent;
         RBNode* grand = parent ? parent->parent : NULL;
-        if (!grand) break; // defensive: no grandparent -> cannot proceed
+        if (!grand) break; 
 
         if (parent == grand->left) {
             RBNode* y = grand->right;
@@ -72,7 +72,7 @@ void fixInsert(RBNode** root, RBNode* z) {
                 if (z == parent->right) {
                     z = parent;
                     rb_leftRotate(z, root);
-                    parent = z->parent; // update parent after rotation
+                    parent = z->parent;
                     grand = parent ? parent->parent : NULL;
                     if (!parent || !grand) continue;
                 }
@@ -92,7 +92,7 @@ void fixInsert(RBNode** root, RBNode* z) {
                 if (z == parent->left) {
                     z = parent;
                     rb_rightRotate(z, root);
-                    parent = z->parent; // update parent after rotation
+                    parent = z->parent; 
                     grand = parent ? parent->parent : NULL;
                     if (!parent || !grand) continue;
                 }
@@ -151,16 +151,16 @@ RBNode* minimum(RBNode* node) {
 
 void fixDelete(RBNode** root, RBNode* x) {
     while (x != *root && x && x->color == BLACK) {
-        if (!x || !x->parent) break;  // Safety check
+        if (!x || !x->parent) break;  
         if (x == x->parent->left) {
             RBNode* w = x->parent->right;
-            if (!w) break;  // Safety check
+            if (!w) break;  
             if (w->color == RED) {
                 w->color = BLACK;
                 x->parent->color = RED;
                 rb_leftRotate(x->parent, root);
                 w = x->parent->right;
-                if (!w) break;  // Safety check
+                if (!w) break;  
             }
             if ((!w->left || w->left->color == BLACK) && (!w->right || w->right->color == BLACK)) {
                 w->color = RED;
@@ -172,7 +172,7 @@ void fixDelete(RBNode** root, RBNode* x) {
                     w->color = RED;
                     rb_rightRotate(w, root);
                     w = x->parent->right;
-                    if (!w) break;  // Safety check
+                    if (!w) break;  
                 }
                 w->color = x->parent->color;
                 x->parent->color = BLACK;
@@ -183,13 +183,13 @@ void fixDelete(RBNode** root, RBNode* x) {
             }
         } else {
             RBNode* w = x->parent->left;
-            if (!w) break;  // Safety check
+            if (!w) break;  
             if (w->color == RED) {
                 w->color = BLACK;
                 x->parent->color = RED;
                 rb_rightRotate(x->parent, root);
                 w = x->parent->left;
-                if (!w) break;  // Safety check
+                if (!w) break;  
             }
             if ((!w->left || w->left->color == BLACK) && (!w->right || w->right->color == BLACK)) {
                 w->color = RED;
@@ -201,7 +201,7 @@ void fixDelete(RBNode** root, RBNode* x) {
                     w->color = RED;
                     rb_leftRotate(w, root);
                     w = x->parent->left;
-                    if (!w) break;  // Safety check
+                    if (!w) break;  
                 }
                 w->color = x->parent->color;
                 x->parent->color = BLACK;
