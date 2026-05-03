@@ -117,5 +117,8 @@ The dashboard auto-detects which CSV you upload by its header row.
 
 ## Input Sizes
 1,000 · 5,000 · 10,000 · 50,000 · 100,000 elements
+
+http://localhost:5173/
+
 <img width="1398" height="888" alt="image" src="https://github.com/user-attachments/assets/da4f2aa2-16c3-4a33-80d0-4dd62b99d5d1" />
 
