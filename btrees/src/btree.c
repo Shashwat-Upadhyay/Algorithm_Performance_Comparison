@@ -3,32 +3,16 @@
 #include <stdbool.h>
 #include "btree.h"
 
-/*
- * B-Tree of order BT_ORDER (default 5).
- * Each node holds at most BT_MAX_KEYS = BT_ORDER-1 = 4 keys.
- * Each internal node has at most BT_ORDER = 5 children.
- * Minimum keys per non-root node: BT_MIN_KEYS = ceil(BT_ORDER/2)-1 = 2.
- *
- * Split arithmetic (full node has BT_MAX_KEYS keys, indices 0..BT_MAX_KEYS-1):
- *   median_idx = BT_MIN_KEYS          (= 2 for order-5)
- *   left  keeps keys[0 .. median_idx-1],      n = BT_MIN_KEYS
- *   right gets  keys[median_idx+1 .. end],    n = BT_MAX_KEYS - BT_MIN_KEYS - 1
- *   parent receives keys[median_idx] (promoted)
- */
-
-/* ── Metrics ───────────────────────────────────────────────────────────────── */
-long long bt_comparisons   = 0;
-long long bt_splits        = 0;
-long long bt_merges        = 0;
+long long bt_comparisons = 0;
+long long bt_splits = 0;
+long long bt_merges = 0;
 long long bt_node_accesses = 0;
-int       bt_height        = 0;
+int bt_height = 0;
 
-/* ── Constants derived from BT_ORDER ──────────────────────────────────────── */
-#define MEDIAN     BT_MIN_KEYS                              /* 2 */
-#define RIGHT_N    (BT_MAX_KEYS - BT_MIN_KEYS - 1)         /* 1 */
-#define RIGHT_START (BT_MIN_KEYS + 1)                       /* 3 */
+#define MEDIAN BT_MIN_KEYS                              
+#define RIGHT_N (BT_MAX_KEYS - BT_MIN_KEYS - 1)         
+#define RIGHT_START (BT_MIN_KEYS + 1)                       
 
-/* ── Internal helpers ──────────────────────────────────────────────────────── */
 static BtNode *new_node(bool leaf) {
     BtNode *node = calloc(1, sizeof(BtNode));
     if (!node) { perror("calloc"); exit(1); }
@@ -36,7 +20,6 @@ static BtNode *new_node(bool leaf) {
     return node;
 }
 
-/* ── Public lifecycle ──────────────────────────────────────────────────────── */
 BTree *bt_create(void) {
     BTree *t = malloc(sizeof(BTree));
     if (!t) { perror("malloc"); exit(1); }
@@ -51,7 +34,6 @@ void bt_free(BtNode *node) {
     free(node);
 }
 
-/* ── Search ────────────────────────────────────────────────────────────────── */
 bool bt_search(BtNode *root, int k) {
     if (!root) return false;
     bt_node_accesses++;
@@ -59,18 +41,16 @@ bool bt_search(BtNode *root, int k) {
     while (i < root->n) {
         bt_comparisons++;
         if (k == root->keys[i]) return true;
-        if (k <  root->keys[i]) break;
+        if (k < root->keys[i]) break;
         i++;
     }
     if (root->leaf) return false;
     return bt_search(root->C[i], k);
 }
 
-/* ── Split full child y (child i of parent) ───────────────────────────────── */
 static void split_child(BtNode *parent, int i, BtNode *y) {
     bt_splits++;
 
-    /* right sibling inherits the upper half of y's keys/children */
     BtNode *z = new_node(y->leaf);
     z->n = RIGHT_N;
 
@@ -81,32 +61,27 @@ static void split_child(BtNode *parent, int i, BtNode *y) {
         for (int j = 0; j <= RIGHT_N; j++)
             z->C[j] = y->C[j + RIGHT_START];
 
-    /* truncate y to its left half */
     y->n = MEDIAN;
 
-    /* clear the now-dead upper pointers in y so they can't be followed */
     if (!y->leaf)
         for (int j = RIGHT_START; j <= BT_MAX_KEYS; j++)
             y->C[j] = NULL;
 
-    /* make room in parent for the new child and promoted key */
     for (int j = parent->n; j >= i + 1; j--)
         parent->C[j + 1] = parent->C[j];
     parent->C[i + 1] = z;
 
     for (int j = parent->n - 1; j >= i; j--)
         parent->keys[j + 1] = parent->keys[j];
-    parent->keys[i] = y->keys[MEDIAN];   /* promoted key */
+    parent->keys[i] = y->keys[MEDIAN];   
     parent->n++;
 }
 
-/* ── Insert into a guaranteed-non-full node ───────────────────────────────── */
 static void insert_non_full(BtNode *node, int k) {
     bt_node_accesses++;
     int i = node->n - 1;
 
     if (node->leaf) {
-        /* shift keys right to make room */
         while (i >= 0) {
             bt_comparisons++;
             if (node->keys[i] <= k) break;
@@ -116,13 +91,12 @@ static void insert_non_full(BtNode *node, int k) {
         node->keys[i + 1] = k;
         node->n++;
     } else {
-        /* find the child subtree to descend into */
         while (i >= 0) {
             bt_comparisons++;
             if (node->keys[i] <= k) break;
             i--;
         }
-        i++;   /* child index */
+        i++;  
         if (node->C[i]->n == BT_MAX_KEYS) {
             split_child(node, i, node->C[i]);
             bt_comparisons++;
@@ -132,7 +106,6 @@ static void insert_non_full(BtNode *node, int k) {
     }
 }
 
-/* ── Public insert ─────────────────────────────────────────────────────────── */
 void bt_insert(BTree *tree, int k) {
     if (!tree->root) {
         tree->root = new_node(true);
@@ -143,7 +116,6 @@ void bt_insert(BTree *tree, int k) {
     }
 
     if (tree->root->n == BT_MAX_KEYS) {
-        /* root is full — grow the tree upward */
         BtNode *s = new_node(false);
         s->C[0] = tree->root;
         split_child(s, 0, tree->root);
@@ -156,7 +128,6 @@ void bt_insert(BTree *tree, int k) {
     }
 }
 
-/* ── Delete helpers ────────────────────────────────────────────────────────── */
 static int find_key(BtNode *node, int k) {
     int idx = 0;
     while (idx < node->n) {
@@ -186,10 +157,8 @@ static void merge_nodes(BtNode *parent, int idx) {
     BtNode *left  = parent->C[idx];
     BtNode *right = parent->C[idx + 1];
 
-    /* pull parent's separator key down into left */
     left->keys[left->n] = parent->keys[idx];
 
-    /* copy right's keys and children into left */
     for (int i = 0; i < right->n; i++)
         left->keys[left->n + 1 + i] = right->keys[i];
 
@@ -199,7 +168,6 @@ static void merge_nodes(BtNode *parent, int idx) {
 
     left->n += 1 + right->n;
 
-    /* remove separator from parent */
     for (int i = idx + 1; i < parent->n; i++)
         parent->keys[i - 1] = parent->keys[i];
     for (int i = idx + 2; i <= parent->n; i++)
@@ -212,17 +180,16 @@ static void merge_nodes(BtNode *parent, int idx) {
 
 static void borrow_from_prev(BtNode *parent, int idx) {
     BtNode *child = parent->C[idx];
-    BtNode *sib   = parent->C[idx - 1];
+    BtNode *sib = parent->C[idx - 1];
 
-    /* shift child's keys/children right by one */
     for (int i = child->n - 1; i >= 0; i--)
         child->keys[i + 1] = child->keys[i];
     if (!child->leaf)
         for (int i = child->n; i >= 0; i--)
             child->C[i + 1] = child->C[i];
 
-    child->keys[0]          = parent->keys[idx - 1];
-    parent->keys[idx - 1]   = sib->keys[sib->n - 1];
+    child->keys[0] = parent->keys[idx - 1];
+    parent->keys[idx - 1] = sib->keys[sib->n - 1];
     if (!child->leaf)
         child->C[0] = sib->C[sib->n];
 
@@ -255,8 +222,10 @@ static void fill(BtNode *parent, int idx) {
     else if (idx < parent->n && parent->C[idx + 1]->n > BT_MIN_KEYS)
         borrow_from_next(parent, idx);
     else {
-        if (idx < parent->n) merge_nodes(parent, idx);
-        else                  merge_nodes(parent, idx - 1);
+        if (idx < parent->n) 
+            merge_nodes(parent, idx);
+        else                  
+            merge_nodes(parent, idx - 1);
     }
 }
 
@@ -287,19 +256,23 @@ static void remove_node(BtNode *node, int k) {
     int idx = find_key(node, k);
 
     if (idx < node->n && node->keys[idx] == k) {
-        if (node->leaf) remove_from_leaf(node, idx);
-        else            remove_from_non_leaf(node, idx);
+        if (node->leaf) 
+            remove_from_leaf(node, idx);
+        else            
+            remove_from_non_leaf(node, idx);
     } else {
-        if (node->leaf) return;   /* key not present */
+        if (node->leaf) return;
+
         bool last = (idx == node->n);
         if (node->C[idx]->n <= BT_MIN_KEYS) fill(node, idx);
-        /* after fill, the child at idx may have been merged into idx-1 */
-        if (last && idx > node->n) remove_node(node->C[idx - 1], k);
-        else                        remove_node(node->C[idx], k);
+
+        if (last && idx > node->n) 
+            remove_node(node->C[idx - 1], k);
+        else                        
+            remove_node(node->C[idx], k);
     }
 }
 
-/* ── Public delete ─────────────────────────────────────────────────────────── */
 void bt_delete(BTree *tree, int k) {
     if (!tree->root) return;
     remove_node(tree->root, k);
@@ -311,7 +284,6 @@ void bt_delete(BTree *tree, int k) {
     }
 }
 
-/* ── Stats ─────────────────────────────────────────────────────────────────── */
 int bt_get_height(BtNode *root) {
     if (!root) return 0;
     if (root->leaf) return 1;
@@ -320,7 +292,7 @@ int bt_get_height(BtNode *root) {
 
 static void fill_factor_helper(BtNode *node, double *sum, int *count) {
     if (!node) return;
-    (*sum)   += (double)node->n / BT_MAX_KEYS;
+    (*sum) += (double)node->n / BT_MAX_KEYS;
     (*count) += 1;
     if (!node->leaf)
         for (int i = 0; i <= node->n; i++)

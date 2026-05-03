@@ -150,6 +150,7 @@ RBNode* minimum(RBNode* node) {
 }
 
 void fixDelete(RBNode** root, RBNode* x) {
+    if (!x) return;
     while (x != *root && x && x->color == BLACK) {
         if (!x || !x->parent) break;  
         if (x == x->parent->left) {

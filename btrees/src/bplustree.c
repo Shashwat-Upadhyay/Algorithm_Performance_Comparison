@@ -3,29 +3,33 @@
 #include <stdbool.h>
 #include "bplustree.h"
 
-/* ── Global metrics ────────────────────────────────────────────────────────── */
-long long bp_comparisons    = 0;
-long long bp_splits         = 0;
-long long bp_node_accesses  = 0;
+long long bp_comparisons = 0;
+long long bp_splits = 0;
+long long bp_node_accesses = 0;
 long long bp_range_accesses = 0;
-int       bp_height         = 0;
+int bp_height = 0;
 
-/* ── Internal helpers ──────────────────────────────────────────────────────── */
 static BPlusNode *new_node(bool leaf) {
     BPlusNode *node = (BPlusNode *)malloc(sizeof(BPlusNode));
-    if (!node) { perror("malloc"); exit(1); }
+    if (!node) { 
+        perror("malloc"); 
+        exit(1);
+    }
     node->leaf = leaf;
-    node->n    = 0;
+    node->n = 0;
+    //node->parent = NULL;
     node->next = NULL;
     for (int i = 0; i < BP_ORDER; i++) node->children[i] = NULL;
     return node;
 }
 
-/* ── Public lifecycle ──────────────────────────────────────────────────────── */
 BPlusTree *bp_create(void) {
     BPlusTree *t = (BPlusTree *)malloc(sizeof(BPlusTree));
-    if (!t) { perror("malloc"); exit(1); }
-    t->root = new_node(true);   /* B+ tree always starts with one empty leaf */
+    if (!t) { 
+        perror("malloc"); 
+        exit(1); 
+    }
+    t->root = new_node(true);   
     bp_height = 1;
     return t;
 }
@@ -37,7 +41,6 @@ void bp_free(BPlusNode *node) {
     free(node);
 }
 
-/* ── Search ────────────────────────────────────────────────────────────────── */
 bool bp_search(BPlusNode *root, int key) {
     if (!root) return false;
     bp_node_accesses++;
@@ -46,51 +49,47 @@ bool bp_search(BPlusNode *root, int key) {
     while (i < root->n) {
         bp_comparisons++;
         if (key == root->keys[i] && root->leaf) return true;
-        if (key <  root->keys[i]) break;
+        if (key < root->keys[i]) break;
         i++;
     }
     if (root->leaf) return false;
     return bp_search(root->children[i], key);
 }
 
-/* ── Split child ───────────────────────────────────────────────────────────── */
 static void split_child(BPlusNode *parent, int i, BPlusNode *child) {
     bp_splits++;
 
     BPlusNode *newNode = new_node(child->leaf);
-    int orig_n = child->n;                    /* save BEFORE any truncation */
-    int mid    = BP_MAX_KEYS / 2;             /* split point index           */
+    //newNode->parent = parent;
+    int orig_n = child->n;                   
+    int mid = BP_MAX_KEYS / 2;            
 
     if (child->leaf) {
-        /*
-         * B+ tree leaf split: the key at 'mid' is COPIED up (not moved).
-         * Left leaf keeps keys[0..mid-1].
-         * Right leaf gets  keys[mid..orig_n-1]  (includes the copied-up key).
-         * Parent receives  keys[mid] as separator.
-         */
         newNode->n = orig_n - mid;
         for (int j = 0; j < newNode->n; j++)
             newNode->keys[j] = child->keys[j + mid];
         child->n = mid;
-        /* maintain leaf linked list */
+  
         newNode->next = child->next;
         child->next   = newNode;
     } else {
-        /*
-         * Internal node split: key at 'mid' is MOVED up (not copied).
-         * Left  keeps keys[0..mid-1]  and children[0..mid].
-         * Right gets  keys[mid+1..orig_n-1] and children[mid+1..orig_n].
-         * Parent receives keys[mid] as separator.
-         */
         newNode->n = orig_n - mid - 1;
+
         for (int j = 0; j < newNode->n; j++)
             newNode->keys[j] = child->keys[j + mid + 1];
+
         for (int j = 0; j <= newNode->n; j++)
             newNode->children[j] = child->children[j + mid + 1];
+
+        // for (int j = 0; j <= newNode->n; j++) {
+        //     newNode->children[j] = child->children[j + mid + 1];
+        //     if (newNode->children[j])
+        //         newNode->children[j]->parent = newNode;
+        // }
+
         child->n = mid;
     }
 
-    /* shift parent's children and keys */
     for (int j = parent->n; j >= i + 1; j--)
         parent->children[j + 1] = parent->children[j];
     parent->children[i + 1] = newNode;
@@ -102,7 +101,6 @@ static void split_child(BPlusNode *parent, int i, BPlusNode *child) {
     parent->n++;
 }
 
-/* ── Insert into non-full node ─────────────────────────────────────────────── */
 static void insert_non_full(BPlusNode *node, int key) {
     bp_node_accesses++;
     int i = node->n - 1;
@@ -132,16 +130,19 @@ static void insert_non_full(BPlusNode *node, int key) {
     }
 }
 
-/* ── Public insert ─────────────────────────────────────────────────────────── */
 void bp_insert(BPlusTree *tree, int key) {
     BPlusNode *root = tree->root;
 
     if (root->n == BP_MAX_KEYS) {
         BPlusNode *newRoot = new_node(false);
         newRoot->children[0] = root;
+        //root->parent = newRoot;
+
         split_child(newRoot, 0, root);
+
         int i = (newRoot->keys[0] < key) ? 1 : 0;
         insert_non_full(newRoot->children[i], key);
+
         tree->root = newRoot;
         bp_height++;
     } else {
@@ -149,38 +150,34 @@ void bp_insert(BPlusTree *tree, int key) {
     }
 }
 
-/* ── Range query (B+ tree advantage: leaf linked-list traversal) ─────────── */
-int bp_range_query(BPlusTree *tree, int lo, int hi) {
+int bp_range_query(BPlusTree *tree, int low, int high) {
     if (!tree->root) return 0;
 
-    /* Step 1: descend to the first leaf >= lo */
     BPlusNode *node = tree->root;
     while (!node->leaf) {
         bp_node_accesses++;
         int i = 0;
         while (i < node->n) {
             bp_comparisons++;
-            if (lo < node->keys[i]) break;
+            if (low < node->keys[i]) break;
             i++;
         }
         node = node->children[i];
     }
 
-    /* Step 2: scan across leaf linked-list until key > hi */
     int count = 0;
     while (node) {
         bp_range_accesses++;
         for (int i = 0; i < node->n; i++) {
             bp_comparisons++;
-            if (node->keys[i] > hi)  return count;
-            if (node->keys[i] >= lo) count++;
+            if (node->keys[i] > high)  return count;
+            if (node->keys[i] >= low) count++;
         }
         node = node->next;
     }
     return count;
 }
 
-/* ── Stats ─────────────────────────────────────────────────────────────────── */
 int bp_get_height(BPlusNode *root) {
     if (!root) return 0;
     if (root->leaf) return 1;
@@ -189,7 +186,7 @@ int bp_get_height(BPlusNode *root) {
 
 static void fill_factor_helper(BPlusNode *node, double *sum, int *count) {
     if (!node) return;
-    (*sum)   += (double)node->n / BP_MAX_KEYS;
+    (*sum) += (double)node->n / BP_MAX_KEYS;
     (*count) += 1;
     if (!node->leaf)
         for (int i = 0; i <= node->n; i++)
@@ -198,7 +195,273 @@ static void fill_factor_helper(BPlusNode *node, double *sum, int *count) {
 
 double bp_fill_factor(BPlusNode *root) {
     double sum = 0.0;
-    int    cnt = 0;
+    int cnt = 0;
     fill_factor_helper(root, &sum, &cnt);
     return cnt ? (sum / cnt) * 100.0 : 0.0;
 }
+
+// /* ── minimum keys (except root) ───────────────────────────── */
+// #define BP_MIN_KEYS ((BP_ORDER - 1) / 2)
+
+// /* ── find leaf containing key ─────────────────────────────── */
+// static BPlusNode *find_leaf(BPlusNode *root, int key) {
+//     if (!root) return NULL;
+
+//     BPlusNode *node = root;
+//     while (!node->leaf) {
+//         int i = 0;
+//         while (i < node->n && key >= node->keys[i]) i++;
+//         node = node->children[i];
+//     }
+//     return node;
+// }
+
+// /* ── child index in parent ────────────────────────────────── */
+// static int child_index(BPlusNode *parent, BPlusNode *child) {
+//     for (int i = 0; i <= parent->n; i++)
+//         if (parent->children[i] == child) return i;
+//     return -1;
+// }
+
+// /* ── remove key from leaf ─────────────────────────────────── */
+// static bool remove_from_leaf(BPlusNode *leaf, int key) {
+//     int i = 0;
+//     while (i < leaf->n && leaf->keys[i] != key) i++;
+//     if (i == leaf->n) return false;
+
+//     for (; i < leaf->n - 1; i++)
+//         leaf->keys[i] = leaf->keys[i + 1];
+
+//     leaf->n--;
+//     return true;
+// }
+
+// /* ── update parent separator after leaf first key changes ─── */
+// static void update_parent_key(BPlusNode *node) {
+//     if (!node || !node->parent) return;
+
+//     BPlusNode *parent = node->parent;
+//     int idx = child_index(parent, node);
+
+//     if (idx > 0 && node->n > 0)
+//         parent->keys[idx - 1] = node->keys[0];
+// }
+
+// /* ── borrow from left sibling ─────────────────────────────── */
+// static bool borrow_left(BPlusNode *node, int idx) {
+//     if (idx == 0) return false;
+
+//     BPlusNode *parent = node->parent;
+//     BPlusNode *left   = parent->children[idx - 1];
+
+//     if (left->n <= BP_MIN_KEYS) return false;
+
+//     for (int i = node->n; i > 0; i--)
+//         node->keys[i] = node->keys[i - 1];
+
+//     node->keys[0] = left->keys[left->n - 1];
+//     node->n++;
+//     left->n--;
+
+//     parent->keys[idx - 1] = node->keys[0];
+//     return true;
+// }
+
+// /* ── borrow from right sibling ────────────────────────────── */
+// static bool borrow_right(BPlusNode *node, int idx) {
+//     BPlusNode *parent = node->parent;
+//     if (idx >= parent->n) return false;
+
+//     BPlusNode *right = parent->children[idx + 1];
+
+//     if (right->n <= BP_MIN_KEYS) return false;
+
+//     node->keys[node->n] = right->keys[0];
+//     node->n++;
+
+//     for (int i = 0; i < right->n - 1; i++)
+//         right->keys[i] = right->keys[i + 1];
+
+//     right->n--;
+
+//     parent->keys[idx] = right->keys[0];
+//     return true;
+// }
+
+// /* ── forward declaration ──────────────────────────────────── */
+// static void rebalance_internal(BPlusTree *tree, BPlusNode *node);
+
+// /* ── merge leaf with sibling ──────────────────────────────── */
+// static void merge_leaf(BPlusTree *tree, BPlusNode *node, int idx) {
+//     BPlusNode *parent = node->parent;
+
+//     BPlusNode *left;
+//     BPlusNode *right;
+//     int sep;
+
+//     if (idx > 0) {
+//         left  = parent->children[idx - 1];
+//         right = node;
+//         sep   = idx - 1;
+//     } else {
+//         left  = node;
+//         right = parent->children[idx + 1];
+//         sep   = idx;
+//     }
+
+//     for (int i = 0; i < right->n; i++)
+//         left->keys[left->n + i] = right->keys[i];
+
+//     left->n += right->n;
+//     left->next = right->next;
+
+//     for (int i = sep; i < parent->n - 1; i++) {
+//         parent->keys[i] = parent->keys[i + 1];
+//         parent->children[i + 1] = parent->children[i + 2];
+//     }
+
+//     parent->n--;
+//     free(right);
+
+//     if (parent == tree->root && parent->n == 0) {
+//         tree->root = left;
+//         left->parent = NULL;
+//         free(parent);
+//         return;
+//     }
+
+//     if (parent != tree->root && parent->n < BP_MIN_KEYS)
+//         rebalance_internal(tree, parent);
+// }
+
+// /* ── internal rebalance ───────────────────────────────────── */
+// static void rebalance_internal(BPlusTree *tree, BPlusNode *node) {
+//     if (node == tree->root) return;
+
+//     BPlusNode *parent = node->parent;
+//     int idx = child_index(parent, node);
+
+//     /* try left borrow */
+//     if (idx > 0) {
+//         BPlusNode *left = parent->children[idx - 1];
+
+//         if (left->n > BP_MIN_KEYS) {
+//             for (int i = node->n; i > 0; i--)
+//                 node->keys[i] = node->keys[i - 1];
+
+//             for (int i = node->n + 1; i > 0; i--)
+//                 node->children[i] = node->children[i - 1];
+
+//             node->keys[0] = parent->keys[idx - 1];
+//             node->children[0] = left->children[left->n];
+//             if (node->children[0]) node->children[0]->parent = node;
+
+//             parent->keys[idx - 1] = left->keys[left->n - 1];
+
+//             node->n++;
+//             left->n--;
+//             return;
+//         }
+//     }
+
+//     /* try right borrow */
+//     if (idx < parent->n) {
+//         BPlusNode *right = parent->children[idx + 1];
+
+//         if (right->n > BP_MIN_KEYS) {
+//             node->keys[node->n] = parent->keys[idx];
+//             node->children[node->n + 1] = right->children[0];
+//             if (node->children[node->n + 1])
+//                 node->children[node->n + 1]->parent = node;
+
+//             parent->keys[idx] = right->keys[0];
+
+//             for (int i = 0; i < right->n - 1; i++)
+//                 right->keys[i] = right->keys[i + 1];
+
+//             for (int i = 0; i < right->n; i++)
+//                 right->children[i] = right->children[i + 1];
+
+//             node->n++;
+//             right->n--;
+//             return;
+//         }
+//     }
+
+//     /* merge */
+//     BPlusNode *left;
+//     BPlusNode *right;
+//     int sep;
+
+//     if (idx > 0) {
+//         left = parent->children[idx - 1];
+//         right = node;
+//         sep = idx - 1;
+//     } else {
+//         left = node;
+//         right = parent->children[idx + 1];
+//         sep = idx;
+//     }
+
+//     left->keys[left->n] = parent->keys[sep];
+//     left->n++;
+
+//     for (int i = 0; i < right->n; i++)
+//         left->keys[left->n + i] = right->keys[i];
+
+//     for (int i = 0; i <= right->n; i++) {
+//         left->children[left->n + i] = right->children[i];
+//         if (right->children[i])
+//             right->children[i]->parent = left;
+//     }
+
+//     left->n += right->n;
+
+//     for (int i = sep; i < parent->n - 1; i++) {
+//         parent->keys[i] = parent->keys[i + 1];
+//         parent->children[i + 1] = parent->children[i + 2];
+//     }
+
+//     parent->n--;
+//     free(right);
+
+//     if (parent == tree->root && parent->n == 0) {
+//         tree->root = left;
+//         left->parent = NULL;
+//         free(parent);
+//         return;
+//     }
+
+//     if (parent != tree->root && parent->n < BP_MIN_KEYS)
+//         rebalance_internal(tree, parent);
+// }
+
+// /* ── public delete ────────────────────────────────────────── */
+// void bp_delete(BPlusTree *tree, int key) {
+//     if (!tree || !tree->root) return;
+
+//     BPlusNode *leaf = find_leaf(tree->root, key);
+//     if (!leaf) return;
+
+//     if (!remove_from_leaf(leaf, key)) return;
+
+//     if (leaf == tree->root) {
+//         if (leaf->n == 0) {
+//             free(tree->root);
+//             tree->root = new_node(true);
+//         }
+//         return;
+//     }
+
+//     update_parent_key(leaf);
+
+//     if (leaf->n >= BP_MIN_KEYS)
+//         return;
+
+//     int idx = child_index(leaf->parent, leaf);
+
+//     if (borrow_left(leaf, idx)) return;
+//     if (borrow_right(leaf, idx)) return;
+
+//     merge_leaf(tree, leaf, idx);
+// }

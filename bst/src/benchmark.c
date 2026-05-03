@@ -15,7 +15,7 @@ void generate_sorted(int arr[], int n) {
 }
 
 void generate_reverse(int arr[], int n) {
-    for (int i = 0; i < n; i++) arr[i] = n - i;
+    for (int i = 0; i < n; i++) arr[i] = n - 1 - i;
 }
 
 double get_time() {
@@ -30,7 +30,7 @@ int main() {
     int   num_patterns   = 3;
     char *pattern_name[] = {"random", "sorted", "reverse"};
 
-    system("if not exist ..\\result mkdir ..\\result");
+    system("mkdir -p ../result");
     FILE *fp = fopen("D:/Sem_4/ADS_CP/result/results.csv", "w");
     if (!fp) fp = fopen("../result/results.csv", "w");
     if (!fp) fp = fopen("results.csv", "w");
