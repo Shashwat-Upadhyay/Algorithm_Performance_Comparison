@@ -129,13 +129,15 @@ int main(void) {
             printf("  B+ range [%d,%d]: %d keys found  (leaf-accesses=%lld)\n",
                    lo, hi, found, bp_range_accesses);
 
-            /* delete */
-        //     bp_comparisons = bp_splits = bp_node_accesses = 0;
-        //     start = get_time();
-        //     /* B+ delete not yet implemented — record zero row as placeholder */
-        //     end = get_time();
-        //     fprintf(fp, "BPlusTree,delete,%s,%d,%.6f,0,0,0,0,%d,%.2f\n",
-        //             pattern_name[p], n, end-start, bph, bpf);
+        /* delete */
+            bp_comparisons = bp_splits = bp_merges = bp_node_accesses = 0;
+            start = get_time();
+            for (int i = 0; i < n; i++) bp_delete(bpt, arr[i]);
+            end = get_time();
+
+            fprintf(fp, "BPlusTree,delete,%s,%d,%.6f,%lld,%lld,%lld,%lld,%d,%.2f\n",
+                    pattern_name[p], n, end-start,
+                    bp_splits, bp_merges, bp_comparisons, bp_node_accesses, bph, bpf);
 
             bp_free(bpt->root);
             free(bpt);

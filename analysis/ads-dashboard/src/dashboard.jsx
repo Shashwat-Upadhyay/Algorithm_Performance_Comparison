@@ -299,12 +299,19 @@ function BTreeSection({ data, pattern }) {
   const [metric, setMetric] = useState("splits");
   const [op, setOp] = useState("insert");
 
-  const metricLine = SIZES.map((n, i) => {
-    const row = { n: SIZE_LABELS[i] };
-    row["B-Tree"] = get(data, "BTree", op, pattern, n, metric);
-    if (op !== "delete") row["B+ Tree"] = get(data, "BPlusTree", op, pattern, n, metric);
-    return row;
-  });
+  // const metricLine = SIZES.map((n, i) => {
+  //   const row = { n: SIZE_LABELS[i] };
+  //   row["B-Tree"] = get(data, "BTree", op, pattern, n, metric);
+  //   if (op !== "delete") row["B+ Tree"] = get(data, "BPlusTree", op, pattern, n, metric);
+  //   return row;
+  // });
+  // FIXED — always include B+ Tree
+  const metricLine = SIZES.map((n, i) => ({
+    n: SIZE_LABELS[i],
+    "B-Tree":  get(data, "BTree",     op, pattern, n, metric),
+    "B+ Tree": get(data, "BPlusTree", op, pattern, n, metric),
+  }));
+
 
   const heightLine = SIZES.map((n, i) => ({
     n: SIZE_LABELS[i],
@@ -348,8 +355,8 @@ function BTreeSection({ data, pattern }) {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
           {statDefs.map(s => {
             const entries = [
-              { label: "B-Tree (ord 5)", color: C.btree, val: get(data, "BTree", s.op, pattern, 100000, s.key) },
-              { label: "B+ Tree (ord 5)", color: C.bplus, val: get(data, "BPlusTree", s.op, pattern, 100000, s.key) },
+              { label: "B-Tree ", color: C.btree, val: get(data, "BTree", s.op, pattern, 100000, s.key) },
+              { label: "B+ Tree ", color: C.bplus, val: get(data, "BPlusTree", s.op, pattern, 100000, s.key) },
             ];
             const winner = s.key === "fill_factor"
               ? Math.max(...entries.map(e => e.val))
@@ -369,7 +376,7 @@ function BTreeSection({ data, pattern }) {
           <Tabs small options={[
             { value: "insert", label: "Insert" },
             { value: "search", label: "Search" },
-            { value: "delete", label: "Delete (B-Tree only)" },
+            { value: "delete", label: "Delete " },
           ]} value={op} onChange={setOp} />
           <Tabs small options={[
             { value: "splits", label: "Splits" },
@@ -388,7 +395,8 @@ function BTreeSection({ data, pattern }) {
             <Tooltip content={<CustomTooltip />} />
             <Legend wrapperStyle={{ fontSize: 11, fontFamily: "monospace" }} />
             <Line type="monotone" dataKey="B-Tree" stroke={C.btree} strokeWidth={2.5} dot={{ r: 4, fill: C.btree }} activeDot={{ r: 6 }} />
-            {op !== "delete" && <Line type="monotone" dataKey="B+ Tree" stroke={C.bplus} strokeWidth={2.5} dot={{ r: 4, fill: C.bplus }} activeDot={{ r: 6 }} />}
+            {/* {op !== "delete" && <Line type="monotone" dataKey="B+ Tree" stroke={C.bplus} strokeWidth={2.5} dot={{ r: 4, fill: C.bplus }} activeDot={{ r: 6 }} />} */}
+            <Line type="monotone" dataKey="B+ Tree" stroke={C.bplus} strokeWidth={2.5} dot={{ r: 4, fill: C.bplus }} activeDot={{ r: 6 }} />
           </LineChart>
         </ResponsiveContainer>
       </Card>
@@ -538,7 +546,7 @@ export default function Dashboard() {
             <span style={{ color: "#6366F1", marginLeft: 8 }}>Dashboard</span>
           </div>
           <div style={{ fontSize: 11, color: "#475569", marginTop: 3, letterSpacing: "0.08em" }}>
-            {section === "bst" ? "AVL · Red-Black · Splay Tree" : "B-Tree (order 5) · B+ Tree (order 5)"}
+            {section === "bst" ? "AVL · Red-Black · Splay Tree" : "B-Tree · B+ Tree "}
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>

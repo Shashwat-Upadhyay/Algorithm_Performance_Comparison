@@ -30,7 +30,6 @@ int main() {
     int   num_patterns   = 3;
     char *pattern_name[] = {"random", "sorted", "reverse"};
 
-    system("mkdir -p ../result");
     FILE *fp = fopen("D:/Sem_4/ADS_CP/result/results.csv", "w");
     if (!fp) fp = fopen("../result/results.csv", "w");
     if (!fp) fp = fopen("results.csv", "w");
