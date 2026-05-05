@@ -66,7 +66,7 @@ const C = {
 
 function get(data, tree, op, pat, n, key) {
   if (!data) return 0;
-  const r = data.find(r => r.tree === tree && r.operation === op && r.pattern === pat && r.n === n);
+  const r = data.find(r => r.tree === tree && r.operation === op && r.pattern === pat && +r.n === n);
   return r ? (r[key] ?? 0) : 0;
 }
 
@@ -151,6 +151,7 @@ function StatCard({ label, entries, winner }) {
 function BSTSection({ data, pattern }) {
   const [metric, setMetric] = useState("rotations");
   const [op, setOp] = useState("insert");
+  const [rotSize, setRotSize] = useState(100000);
 
   const metricLine = SIZES.map((n, i) => ({
     n: SIZE_LABELS[i],
@@ -173,12 +174,12 @@ function BSTSection({ data, pattern }) {
     "Red-Black": get(data, "RB", op, pattern, n, "time"),
     Splay: get(data, "Splay", op, pattern, n, "time"),
   }));
-
+  
   const rotBar = ["Insert", "Delete"].map(o => ({
     op: o,
-    AVL: get(data, "AVL", o.toLowerCase(), pattern, 100000, "rotations"),
-    "Red-Black": get(data, "RB", o.toLowerCase(), pattern, 100000, "rotations"),
-    Splay: get(data, "Splay", o.toLowerCase(), pattern, 100000, "rotations"),
+    AVL: get(data, "AVL", o.toLowerCase(), pattern, rotSize, "rotations"),
+    "Red-Black": get(data, "RB", o.toLowerCase(), pattern, rotSize, "rotations"),
+    Splay: get(data, "Splay", o.toLowerCase(), pattern, rotSize, "rotations"),
   }));
 
   const statDefs = [
@@ -246,8 +247,11 @@ function BSTSection({ data, pattern }) {
         </ResponsiveContainer>
       </Card>
 
-      {/* Rotations bar @ 100K */}
-      <Card title="Rotations at n = 100,000" subtitle="insert & delete operations">
+      {/* Rotations bar */}
+      <Card title={`Rotations at n = ${rotSize.toLocaleString()}`} subtitle="insert & delete operations">
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 4 }}>
+          <Tabs small options={SIZES.map((s, i) => ({ value: s, label: SIZE_LABELS[i] }))} value={rotSize} onChange={setRotSize} />
+        </div>
         <ResponsiveContainer width="100%" height={230}>
           <BarChart data={rotBar} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
@@ -523,7 +527,7 @@ export default function Dashboard() {
       const rows = parseCSV(text, BT_SCHEMA);
       setBtRows(rows);
       setSection("btree");
-      setStatus(`✓ B-Tree loaded: ${rows.length} rows`);
+      setStatus(`✓ B-Trees loaded: ${rows.length} rows`);
       return;
     }
 
